@@ -89,11 +89,9 @@ public class AddLogGrade extends ExtendM3Transaction {
        DBContainer EXTGRD = action.createContainer()
        EXTGRD.set("EXCONO", CONO)
        EXTGRD.set("EXGRAD", GRAD)
-       EXTGRD.set("EXGRNA", GRNA)
-   
+       EXTGRD.set("EXGRNA", GRNA) 
        EXTGRD.set("EXCHID", program.getUser())
-       EXTGRD.set("EXCHNO", 1) 
-          
+       EXTGRD.set("EXCHNO", 1)           
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")          
        EXTGRD.set("EXRGDT", regdate) 

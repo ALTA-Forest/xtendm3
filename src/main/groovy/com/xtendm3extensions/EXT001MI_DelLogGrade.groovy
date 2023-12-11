@@ -14,92 +14,79 @@
  * 
 */
 
- import java.time.LocalDateTime;  
- import java.time.format.DateTimeFormatter;
 
  public class DelLogGrade extends ExtendM3Transaction {
-    private final MIAPI mi; 
-    private final DatabaseAPI database; 
-    private final ProgramAPI program;
-    private final LoggerAPI logger;
+    private final MIAPI mi
+    private final DatabaseAPI database 
+    private final ProgramAPI program
+    private final LoggerAPI logger
   
     int CONO
     String inGRAD
 
-  // Constructor 
-  public DelLogGrade(MIAPI mi, DatabaseAPI database,ProgramAPI program, LoggerAPI logger) {
-     this.mi = mi;
-     this.database = database; 
-     this.program = program;
-     this.logger = logger;
-  } 
+    // Constructor 
+    public DelLogGrade(MIAPI mi, DatabaseAPI database,ProgramAPI program, LoggerAPI logger) {
+       this.mi = mi
+       this.database = database 
+       this.program = program
+       this.logger = logger
+    } 
     
-  public void main() { 
-     // Set Company Number
-     CONO = program.LDAZD.CONO as Integer
-
-     // Grade Code
-     if (mi.in.get("GRAD") != null) {
-        inGRAD = mi.in.get("GRAD") 
-     } else {
-        inGRAD = ""     
-     }
-
-
-     // Validate log grade record
-     Optional<DBContainer> EXTGRD = findEXTGRD(CONO, inGRAD)
-     if(!EXTGRD.isPresent()){
-        mi.error("Log Grade doesn't exist")   
-        return             
-     } else {
-        // Delete records 
-        deleteEXTGRDRecord() 
-     } 
-     
-  }
-
-  //******************************************************************** 
-  // Validate String
-  //******************************************************************** 
-  public  boolean isNullOrEmpty(String key) {
-      if(key != null && !key.isEmpty())
-         return false;
-      return true;
-  }
+    public void main() { 
+       // Set Company Number
+       CONO = program.LDAZD.CONO as Integer
+  
+       // Grade Code
+       if (mi.in.get("GRAD") != null) {
+          inGRAD = mi.in.get("GRAD") 
+       } else {
+          inGRAD = ""     
+       }
+  
+  
+       // Validate log grade record
+       Optional<DBContainer> EXTGRD = findEXTGRD(CONO, inGRAD)
+       if(!EXTGRD.isPresent()){
+          mi.error("Log Grade doesn't exist")   
+          return             
+       } else {
+          // Delete records 
+          deleteEXTGRDRecord() 
+       } 
+       
+    }
+  
+  
+    //******************************************************************** 
+    // Get EXTGRD record
+    //******************************************************************** 
+    private Optional<DBContainer> findEXTGRD(int CONO, String GRAD){  
+       DBAction query = database.table("EXTGRD").index("00").build()
+       def EXTGRD = query.getContainer()
+       EXTGRD.set("EXCONO", CONO)
+       EXTGRD.set("EXGRAD", GRAD)
+       if(query.read(EXTGRD))  { 
+         return Optional.of(EXTGRD)
+       } 
     
-
-  //******************************************************************** 
-  // Get EXTGRD record
-  //******************************************************************** 
-  private Optional<DBContainer> findEXTGRD(int CONO, String GRAD){  
-     DBAction query = database.table("EXTGRD").index("00").selection("EXCONO", "EXGRAD").build()
-     def EXTGRD = query.getContainer()
-     EXTGRD.set("EXCONO", CONO)
-     EXTGRD.set("EXGRAD", GRAD)
-     if(query.read(EXTGRD))  { 
-       return Optional.of(EXTGRD)
-     } 
-  
-     return Optional.empty()
-  }
-  
-
-  //******************************************************************** 
-  // Delete record from EXTGRD
-  //******************************************************************** 
-  void deleteEXTGRDRecord(){ 
-
-     DBAction action = database.table("EXTGRD").index("00").selectAllFields().build()
-     DBContainer EXTGRD = action.getContainer()
-     EXTGRD.set("EXCONO", CONO) 
-     EXTGRD.set("EXGRAD", inGRAD)
-
-     action.readLock(EXTGRD, deleterCallbackEXTGRD)
-  }
+       return Optional.empty()
+    }
     
-  Closure<?> deleterCallbackEXTGRD = { LockedResult lockedResult ->  
-     lockedResult.delete()
-  }
   
+    //******************************************************************** 
+    // Delete record from EXTGRD
+    //******************************************************************** 
+    void deleteEXTGRDRecord(){ 
+       DBAction action = database.table("EXTGRD").index("00").build()
+       DBContainer EXTGRD = action.getContainer()
+       EXTGRD.set("EXCONO", CONO) 
+       EXTGRD.set("EXGRAD", inGRAD)
+       action.readLock(EXTGRD, deleterCallbackEXTGRD)
+    }
+      
+    Closure<?> deleterCallbackEXTGRD = { LockedResult lockedResult ->  
+       lockedResult.delete()
+    }
+    
 
  }

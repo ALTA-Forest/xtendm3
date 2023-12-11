@@ -14,92 +14,80 @@
  * 
 */
 
- import java.time.LocalDateTime;  
- import java.time.format.DateTimeFormatter;
 
  public class DelLogException extends ExtendM3Transaction {
-    private final MIAPI mi; 
-    private final DatabaseAPI database; 
-    private final ProgramAPI program;
-    private final LoggerAPI logger;
+    private final MIAPI mi 
+    private final DatabaseAPI database 
+    private final ProgramAPI program
+    private final LoggerAPI logger
   
     int CONO
     String inECOD
 
-  // Constructor 
-  public DelLogException(MIAPI mi, DatabaseAPI database,ProgramAPI program, LoggerAPI logger) {
-     this.mi = mi;
-     this.database = database; 
-     this.program = program;
-     this.logger = logger;
-  } 
+    // Constructor 
+    public DelLogException(MIAPI mi, DatabaseAPI database, ProgramAPI program, LoggerAPI logger) {
+      this.mi = mi
+      this.database = database 
+      this.program = program
+      this.logger = logger
+    } 
     
-  public void main() { 
-     // Set Company Number
-     CONO = program.LDAZD.CONO as Integer
+    public void main() { 
+      // Set Company Number
+      CONO = program.LDAZD.CONO as Integer
 
-     // Exception Code
-     if (mi.in.get("ECOD") != null) {
+      // Exception Code
+      if (mi.in.get("ECOD") != null) {
         inECOD = mi.in.get("ECOD") 
-     } else {
+      } else {
         inECOD = ""     
-     }
+      }
 
 
-     // Validate log exception record
-     Optional<DBContainer> EXTEXC = findEXTEXC(CONO, inECOD)
-     if(!EXTEXC.isPresent()){
+      // Validate log exception record
+      Optional<DBContainer> EXTEXC = findEXTEXC(CONO, inECOD)
+      if(!EXTEXC.isPresent()){
         mi.error("Exception Code doesn't exist")   
         return             
-     } else {
+      } else {
         // Delete records 
         deleteEXTEXCRecord() 
-     } 
+      } 
      
-  }
+    }
 
-  //******************************************************************** 
-  // Validate String
-  //******************************************************************** 
-  public  boolean isNullOrEmpty(String key) {
-      if(key != null && !key.isEmpty())
-         return false;
-      return true;
-  }
-    
 
-  //******************************************************************** 
-  // Get EXTEXC record
-  //******************************************************************** 
-  private Optional<DBContainer> findEXTEXC(int CONO, String ECOD){  
-     DBAction query = database.table("EXTEXC").index("00").selection("EXCONO", "EXECOD").build()
-     def EXTEXC = query.getContainer()
-     EXTEXC.set("EXCONO", CONO)
-     EXTEXC.set("EXECOD", ECOD)
-     if(query.read(EXTEXC))  { 
-       return Optional.of(EXTEXC)
-     } 
+
+    //******************************************************************** 
+    // Get EXTEXC record
+    //******************************************************************** 
+    private Optional<DBContainer> findEXTEXC(int CONO, String ECOD){  
+      DBAction query = database.table("EXTEXC").index("00").build()
+      def EXTEXC = query.getContainer()
+      EXTEXC.set("EXCONO", CONO)
+      EXTEXC.set("EXECOD", ECOD)
+      if(query.read(EXTEXC))  { 
+        return Optional.of(EXTEXC)
+      } 
   
-     return Optional.empty()
-  }
+      return Optional.empty()
+    }
   
 
-  //******************************************************************** 
-  // Delete record from EXTEXC
-  //******************************************************************** 
-  void deleteEXTEXCRecord(){ 
-
-     DBAction action = database.table("EXTEXC").index("00").selectAllFields().build()
-     DBContainer EXTEXC = action.getContainer()
-     EXTEXC.set("EXCONO", CONO) 
-     EXTEXC.set("EXECOD", inECOD)
-
-     action.readLock(EXTEXC, deleterCallbackEXTEXC)
-  }
+    //******************************************************************** 
+    // Delete record from EXTEXC
+    //******************************************************************** 
+    void deleteEXTEXCRecord(){ 
+      DBAction action = database.table("EXTEXC").index("00").build()
+      DBContainer EXTEXC = action.getContainer()
+      EXTEXC.set("EXCONO", CONO) 
+      EXTEXC.set("EXECOD", inECOD)
+      action.readLock(EXTEXC, deleterCallbackEXTEXC)
+    }
     
-  Closure<?> deleterCallbackEXTEXC = { LockedResult lockedResult ->  
-     lockedResult.delete()
-  }
+    Closure<?> deleterCallbackEXTEXC = { LockedResult lockedResult ->  
+      lockedResult.delete()
+    }
   
 
  }

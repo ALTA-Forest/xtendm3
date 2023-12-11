@@ -66,11 +66,13 @@ public class LstLogGrade extends ExtendM3Transaction {
         ext.set("EXGRAD", inGRAD)
      }
      
+     int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	
+     
      // Read with GRAD as key if entered, else read all 
      if (inGRAD != "") {  
-        action.readAll(ext, 2, releasedItemProcessor) 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
      } else {
-        action.readAll(ext, 1, releasedItemProcessor) 
+        action.readAll(ext, 1, pageSize, releasedItemProcessor) 
      }
   } 
 

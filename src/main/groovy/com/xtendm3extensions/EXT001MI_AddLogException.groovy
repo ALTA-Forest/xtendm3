@@ -89,11 +89,9 @@ public class AddLogException extends ExtendM3Transaction {
        DBContainer EXTEXC = action.createContainer()
        EXTEXC.set("EXCONO", CONO)
        EXTEXC.set("EXECOD", ECOD)
-       EXTEXC.set("EXECNA", ECNA)
-   
+       EXTEXC.set("EXECNA", ECNA)   
        EXTEXC.set("EXCHID", program.getUser())
        EXTEXC.set("EXCHNO", 1) 
-
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")          
        EXTEXC.set("EXRGDT", regdate) 

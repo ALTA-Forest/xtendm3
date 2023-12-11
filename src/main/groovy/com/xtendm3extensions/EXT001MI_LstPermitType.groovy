@@ -71,11 +71,13 @@ public class LstPermitType extends ExtendM3Transaction {
         ext.set("EXPTPC", inPTPC)
      }
      
+     int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+     
      // Read with PTPC as key if entered, else read all 
      if (inPTPC != null && inPTPC != "") {  
-        action.readAll(ext, 2, releasedItemProcessor) 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
      } else {
-        action.readAll(ext, 1, releasedItemProcessor) 
+        action.readAll(ext, 1, pageSize, releasedItemProcessor) 
      }
   } 
 
@@ -85,6 +87,6 @@ public class LstPermitType extends ExtendM3Transaction {
        mi.outData.put("PTSW", ext.get("EXPTSW").toString())
        mi.outData.put("PTDE", ext.getString("EXPTDE"))
        mi.outData.put("PTDT", ext.get("EXPTDT").toString())
-      mi.write() 
+       mi.write() 
    } 
 }
