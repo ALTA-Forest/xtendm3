@@ -41,14 +41,14 @@ public class UpdLogException extends ExtendM3Transaction {
        inCONO = program.LDAZD.CONO as Integer
   
        // Exception Code
-       if (mi.inData.get("ECOD") != null) {
+       if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
           inECOD = mi.inData.get("ECOD").trim() 
        } else {
           inECOD = ""         
        }
         
        // Name
-       if (mi.inData.get("ECNA") != null) {
+       if (mi.in.get("ECNA") != null && mi.in.get("ECNA") != "") {
           inECNA = mi.inData.get("ECNA").trim() 
        } else {
           inECNA = ""        
@@ -73,7 +73,7 @@ public class UpdLogException extends ExtendM3Transaction {
     //******************************************************************** 
     private Optional<DBContainer> findEXTEXC(int cono, String ecod){  
        DBAction query = database.table("EXTEXC").index("00").build()
-       def EXTEXC = query.getContainer()
+       DBContainer EXTEXC = query.getContainer()
        EXTEXC.set("EXCONO", cono)
        EXTEXC.set("EXECOD", ecod)
        if(query.read(EXTEXC))  { 
@@ -89,8 +89,7 @@ public class UpdLogException extends ExtendM3Transaction {
     //********************************************************************    
     void updEXTEXCRecord(){      
        DBAction action = database.table("EXTEXC").index("00").build()
-       DBContainer EXTEXC = action.getContainer()
-       
+       DBContainer EXTEXC = action.getContainer()       
        EXTEXC.set("EXCONO", inCONO)     
        EXTEXC.set("EXECOD", inECOD)
   

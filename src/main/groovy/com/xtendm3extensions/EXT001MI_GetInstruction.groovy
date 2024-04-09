@@ -40,11 +40,11 @@ public class GetInstruction extends ExtendM3Transaction {
     
   public void main() { 
      // Set Company Number
-    inCONO = program.LDAZD.CONO as Integer
+     inCONO = program.LDAZD.CONO as Integer
 
      // Instruction Code
-     if (mi.in.get("INIC") != null) {
-        inINIC = mi.in.get("INIC") 
+     if (mi.in.get("INIC") != null && mi.in.get("INIC") != "") {
+        inINIC = mi.inData.get("INIC").trim() 
      } else {
         inINIC = ""         
      }

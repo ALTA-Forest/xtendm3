@@ -35,40 +35,40 @@ public class AddInstruction extends ExtendM3Transaction {
       
     public void main() {       
        // Set Company Number
-       int CONO = program.LDAZD.CONO as Integer
+       int inCONO = program.LDAZD.CONO as Integer
   
        //Instruction Code
        String inINIC
-       if (mi.in.get("INIC") != null) {
-          inINIC = mi.in.get("INIC") 
+       if (mi.in.get("INIC") != null && mi.in.get("INIC") != "") {
+          inINIC = mi.inData.get("INIC").trim() 
        } else {
           inINIC = ""         
        }
         
        // Name
        String inINNA
-       if (mi.in.get("INNA") != null) {
-          inINNA = mi.in.get("INNA") 
+       if (mi.in.get("INNA") != null && mi.in.get("INNA") != "") {
+          inINNA = mi.inData.get("INNA").trim() 
        } else {
           inINNA = ""        
        }
         
        // Text
        String inINTX
-       if (mi.in.get("INTX") != null) {
-          inINTX = mi.in.get("INTX") 
+       if (mi.in.get("INTX") != null && mi.in.get("INTX") != "") {
+          inINTX = mi.inData.get("INTX").trim() 
        } else {
           inINTX = ""        
        }
   
        // Validate instruction record
-       Optional<DBContainer> EXTINS = findEXTINS(CONO, inINIC)
+       Optional<DBContainer> EXTINS = findEXTINS(inCONO, inINIC)
        if(EXTINS.isPresent()){
           mi.error("Instruction already exists")   
           return             
        } else {
           // Write record 
-          addEXTINSRecord(CONO, inINIC, inINNA, inINTX)          
+          addEXTINSRecord(inCONO, inINIC, inINNA, inINTX)          
        }  
   
     }
@@ -79,7 +79,7 @@ public class AddInstruction extends ExtendM3Transaction {
     //******************************************************************** 
     private Optional<DBContainer> findEXTINS(int CONO, String INIC){  
        DBAction query = database.table("EXTINS").index("00").build()
-       def EXTINS = query.getContainer()
+       DBContainer EXTINS = query.getContainer()
        EXTINS.set("EXCONO", CONO)
        EXTINS.set("EXINIC", INIC)
        if(query.read(EXTINS))  { 

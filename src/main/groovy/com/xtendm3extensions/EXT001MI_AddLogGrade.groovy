@@ -34,33 +34,33 @@ public class AddLogGrade extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     int CONO = program.LDAZD.CONO as Integer
+     int inCONO = program.LDAZD.CONO as Integer
 
      // Grade
      String inGRAD
-     if (mi.in.get("GRAD") != null) {
-        inGRAD = mi.in.get("GRAD") 
+     if (mi.in.get("GRAD") != null && mi.in.get("GRAD") != "") {
+        inGRAD = mi.inData.get("GRAD").trim() 
      } else {
         inGRAD = ""         
      }
       
      // Name
      String inGRNA
-     if (mi.in.get("GRNA") != null) {
-        inGRNA = mi.in.get("GRNA") 
+     if (mi.in.get("GRNA") != null && mi.in.get("GRNA") != "") {
+        inGRNA = mi.inData.get("GRNA").trim() 
      } else {
         inGRNA = ""        
      }
      
 
      // Validate grade record
-     Optional<DBContainer> EXTGRD = findEXTGRD(CONO, inGRAD)
+     Optional<DBContainer> EXTGRD = findEXTGRD(inCONO, inGRAD)
      if(EXTGRD.isPresent()){
         mi.error("Log Grade already exists")   
         return             
      } else {
         // Write record 
-        addEXTGRDRecord(CONO, inGRAD, inGRNA)          
+        addEXTGRDRecord(inCONO, inGRAD, inGRNA)          
      }  
 
   }
@@ -71,7 +71,7 @@ public class AddLogGrade extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTGRD(int CONO, String GRAD){  
      DBAction query = database.table("EXTGRD").index("00").build()
-     def EXTGRD = query.getContainer()
+     DBContainer EXTGRD = query.getContainer()
      EXTGRD.set("EXCONO", CONO)
      EXTGRD.set("EXGRAD", GRAD)
      if(query.read(EXTGRD))  { 

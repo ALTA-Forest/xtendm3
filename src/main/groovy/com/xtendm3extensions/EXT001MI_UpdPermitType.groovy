@@ -19,11 +19,6 @@
 */
 
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
 
 public class UpdPermitType extends ExtendM3Transaction {
     private final MIAPI mi 
@@ -53,14 +48,14 @@ public class UpdPermitType extends ExtendM3Transaction {
        inCONO = program.LDAZD.CONO as Integer
   
        // Permit Type
-       if (mi.inData.get("PTPC") != null) {
+       if (mi.in.get("PTPC") != null && mi.in.get("PTPC") != "") {
           inPTPC = mi.inData.get("PTPC").trim() 
        } else {
           inPTPC = ""         
        }
         
        // Name
-       if (mi.inData.get("PTNA") != null) {
+       if (mi.in.get("PTNA") != null && mi.in.get("PTNA") != "") {
           inPTNA = mi.inData.get("PTNA").trim() 
        } else {
           inPTNA = ""        
@@ -72,7 +67,7 @@ public class UpdPermitType extends ExtendM3Transaction {
        } 
        
        // Description
-       if (mi.inData.get("PTDE") != null) {
+       if (mi.in.get("PTDE") != null && mi.in.get("PTDE") != "") {
           inPTDE = mi.inData.get("PTDE").trim() 
        } else {
           inPTDE = ""        
@@ -81,14 +76,14 @@ public class UpdPermitType extends ExtendM3Transaction {
        // Expiration Date
        if (mi.in.get("PTDT") != null) {
           inPTDT = mi.in.get("PTDT") 
-       } 
-  
-  
-       //Validate date format
-       boolean validPTDT = isDateValid(String.valueOf(inPTDT), "yyyyMMdd") 
-       if(!validPTDT){
-          mi.error("Expiration Date is not valid")   
-          return  
+          
+          //Validate date format
+          boolean validPTDT = utility.call("DateUtil", "isDateValid", String.valueOf(inPTDT), "yyyyMMdd")  
+          if (!validPTDT) {
+              mi.error("Expiration Date is not valid")   
+              return  
+          } 
+
        } 
   
        // Validate permit type
@@ -104,25 +99,13 @@ public class UpdPermitType extends ExtendM3Transaction {
     }
     
     
-    
-    //******************************************************************** 
-    // Check if date format is correct
-    //******************************************************************** 
-    public boolean isDateValid(String date, String format) {
-      try {
-        LocalDate.parse(date, DateTimeFormatter.ofPattern(format))
-        return true
-      } catch (DateTimeParseException e) {
-        return false
-      }
-    }
-    
+        
     //******************************************************************** 
     // Get EXTCTH record
     //******************************************************************** 
     private Optional<DBContainer> findEXTPTT(int cono, String ptpc){  
        DBAction query = database.table("EXTPTT").index("00").build()
-       def EXTPTT = query.getContainer()
+       DBContainer EXTPTT = query.getContainer()
        EXTPTT.set("EXCONO", cono)
        EXTPTT.set("EXPTPC", ptpc)
        if(query.read(EXTPTT))  { 

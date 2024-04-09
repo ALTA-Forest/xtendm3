@@ -41,14 +41,14 @@ public class UpdLogGrade extends ExtendM3Transaction {
        inCONO = program.LDAZD.CONO as Integer
   
        // Grade Code
-       if (mi.inData.get("GRAD") != null) {
+       if (mi.in.get("GRAD") != null && mi.in.get("GRAD") != "") {
           inGRAD = mi.inData.get("GRAD").trim() 
        } else {
           inGRAD = ""         
        }
         
        // Name
-       if (mi.inData.get("GRNA") != null) {
+       if (mi.in.get("GRNA") != null && mi.in.get("GRNA") != "") {
           inGRNA = mi.inData.get("GRNA").trim() 
        } else {
           inGRNA = ""        
@@ -73,7 +73,7 @@ public class UpdLogGrade extends ExtendM3Transaction {
     //******************************************************************** 
     private Optional<DBContainer> findEXTGRD(int cono, String grad){  
        DBAction query = database.table("EXTGRD").index("00").build()
-       def EXTGRD = query.getContainer()
+       DBContainer EXTGRD = query.getContainer()
        EXTGRD.set("EXCONO", cono)
        EXTGRD.set("EXGRAD", grad)
        if(query.read(EXTGRD))  { 
@@ -89,8 +89,7 @@ public class UpdLogGrade extends ExtendM3Transaction {
     //********************************************************************    
     void updEXTGRDRecord(){      
        DBAction action = database.table("EXTGRD").index("00").build()
-       DBContainer EXTGRD = action.getContainer()
-       
+       DBContainer EXTGRD = action.getContainer()       
        EXTGRD.set("EXCONO", inCONO)     
        EXTGRD.set("EXGRAD", inGRAD)
   

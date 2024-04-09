@@ -43,21 +43,21 @@ public class UpdInstruction extends ExtendM3Transaction {
        inCONO = program.LDAZD.CONO as Integer
   
        //Instruction Code
-       if (mi.inData.get("INIC") != null) {
+       if (mi.in.get("INIC") != null && mi.in.get("INIC") != "") {
           inINIC = mi.inData.get("INIC").trim() 
        } else {
           inINIC = ""         
        }
         
        // Name
-       if (mi.inData.get("INNA") != null) {
+       if (mi.in.get("INNA") != null && mi.in.get("INNA") != "") {
           inINNA = mi.inData.get("INNA").trim() 
        } else {
           inINNA = ""        
        }
         
        // Text
-       if (mi.inData.get("INTX") != null) {
+       if (mi.in.get("INTX") != null && mi.in.get("INTX") != "") {
           inINTX = mi.inData.get("INTX").trim()
        } else {
           inINTX = ""        
@@ -81,7 +81,7 @@ public class UpdInstruction extends ExtendM3Transaction {
     //******************************************************************** 
     private Optional<DBContainer> findEXTINS(int cono, String inic){  
        DBAction query = database.table("EXTINS").index("00").build()
-       def EXTINS = query.getContainer()
+       DBContainer EXTINS = query.getContainer()
        EXTINS.set("EXCONO", cono)
        EXTINS.set("EXINIC", inic)
        if(query.read(EXTINS))  { 
@@ -97,8 +97,7 @@ public class UpdInstruction extends ExtendM3Transaction {
     //********************************************************************    
     void updEXTINSRecord(){      
        DBAction action = database.table("EXTINS").index("00").build()
-       DBContainer EXTINS = action.getContainer()
-       
+       DBContainer EXTINS = action.getContainer()       
        EXTINS.set("EXCONO", inCONO)     
        EXTINS.set("EXINIC", inINIC)
   

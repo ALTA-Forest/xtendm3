@@ -34,33 +34,33 @@ public class AddLogException extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     int CONO = program.LDAZD.CONO as Integer
+     int inCONO = program.LDAZD.CONO as Integer
 
      // Exception Code
      String inECOD
-     if (mi.in.get("ECOD") != null) {
-        inECOD = mi.in.get("ECOD") 
+     if (mi.in.get("ECOD") != null  && mi.in.get("ECOD") != "") {
+        inECOD = mi.inData.get("ECOD").trim() 
      } else {
         inECOD = ""         
      }
       
      // Name
      String inECNA
-     if (mi.in.get("ECNA") != null) {
-        inECNA = mi.in.get("ECNA") 
+     if (mi.in.get("ECNA") != null && mi.in.get("ECNA") != "") {
+        inECNA = mi.inData.get("ECNA").trim() 
      } else {
         inECNA = ""        
      }
      
 
      // Validate Exception record
-     Optional<DBContainer> EXTEXC = findEXTEXC(CONO, inECOD)
+     Optional<DBContainer> EXTEXC = findEXTEXC(inCONO, inECOD)
      if(EXTEXC.isPresent()){
         mi.error("Log Exception already exists")   
         return             
      } else {
         // Write record 
-        addEXTEXCRecord(CONO, inECOD, inECNA)          
+        addEXTEXCRecord(inCONO, inECOD, inECNA)          
      }  
 
   }
@@ -71,7 +71,7 @@ public class AddLogException extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTEXC(int CONO, String ECOD){  
      DBAction query = database.table("EXTEXC").index("00").build()
-     def EXTEXC = query.getContainer()
+     DBContainer EXTEXC = query.getContainer()
      EXTEXC.set("EXCONO", CONO)
      EXTEXC.set("EXECOD", ECOD)
      if(query.read(EXTEXC))  { 

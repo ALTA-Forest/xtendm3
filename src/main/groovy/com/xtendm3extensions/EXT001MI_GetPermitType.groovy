@@ -48,8 +48,8 @@ public class GetPermitType extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Permit Type
-     if (mi.in.get("PTPC") != null) {
-        inPTPC = mi.in.get("PTPC") 
+     if (mi.in.get("PTPC") != null && mi.in.get("PTPC") != "") {
+        inPTPC = mi.inData.get("PTPC").trim() 
      } else {
         inPTPC = ""         
      }

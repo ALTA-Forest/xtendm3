@@ -21,7 +21,7 @@
     private final ProgramAPI program
     private final LoggerAPI logger
     
-    int CONO
+    int inCONO
     String inPTPC
   
     // Constructor 
@@ -33,18 +33,18 @@
     } 
       
     public void main() { 
-       // Set Company Number
-       CONO = program.LDAZD.CONO as Integer
+      // Set Company Number
+      inCONO = program.LDAZD.CONO as Integer
   
        // Permit Type
-       if (mi.in.get("PTPC") != null) {
-          inPTPC = mi.in.get("PTPC") 
+       if (mi.in.get("PTPC") != null && mi.in.get("PTPC") != "") {
+          inPTPC = mi.inData.get("PTPC").trim() 
        } else {
           inPTPC = ""     
        }
   
        // Validate permit type
-       Optional<DBContainer> EXTPTT = findEXTPTT(CONO, inPTPC)
+       Optional<DBContainer> EXTPTT = findEXTPTT(inCONO, inPTPC)
        if(!EXTPTT.isPresent()){
           mi.error("Payment Type doesn't exist")   
           return             
@@ -62,7 +62,7 @@
     //******************************************************************** 
     private Optional<DBContainer> findEXTPTT(int CONO, String PTPC){  
        DBAction query = database.table("EXTPTT").index("00").build()
-       def EXTPTT = query.getContainer()
+       DBContainer EXTPTT = query.getContainer()
        EXTPTT.set("EXCONO", CONO)
        EXTPTT.set("EXPTPC", PTPC)
        if(query.read(EXTPTT))  { 
@@ -79,7 +79,7 @@
     void deleteEXTPTTRecord(){ 
        DBAction action = database.table("EXTPTT").index("00").build()
        DBContainer EXTPTT = action.getContainer()
-       EXTPTT.set("EXCONO", CONO) 
+       EXTPTT.set("EXCONO", inCONO) 
        EXTPTT.set("EXPTPC", inPTPC)
        action.readLock(EXTPTT, deleterCallbackEXTPTT)
     }

@@ -39,11 +39,12 @@ public class LstLogException extends ExtendM3Transaction {
   } 
     
   public void main() { 
+     // Set Company Number
      inCONO = program.LDAZD.CONO as Integer
     
      // Exception Code
-     if (mi.in.get("ECOD") != null) {
-        inECOD = mi.in.get("ECOD") 
+     if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
+        inECOD = mi.inData.get("ECOD").trim() 
      } else {
         inECOD = ""     
      }
@@ -59,7 +60,6 @@ public class LstLogException extends ExtendM3Transaction {
   void listLogException(){ 
      DBAction action = database.table("EXTEXC").index("00").selectAllFields().reverse().build()
      DBContainer ext = action.getContainer()
-      
      ext.set("EXCONO", inCONO)
      
      if (inECOD != "") {  

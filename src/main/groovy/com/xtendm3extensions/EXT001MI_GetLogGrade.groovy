@@ -43,8 +43,8 @@ public class GetLogGrade extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Grade Code
-     if (mi.in.get("GRAD") != null) {
-        inGRAD = mi.in.get("GRAD") 
+     if (mi.in.get("GRAD") != null && mi.in.get("GRAD") != "") {
+        inGRAD = mi.inData.get("GRAD").trim() 
      } else {
         inGRAD = ""         
      }

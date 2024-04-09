@@ -39,8 +39,8 @@
       inCONO = program.LDAZD.CONO as Integer
 
       // Instruction Code
-      if (mi.in.get("INIC") != null) {
-        inINIC = mi.in.get("INIC") 
+      if (mi.in.get("INIC") != null && mi.in.get("INIC") != "") {
+        inINIC = mi.inData.get("INIC").trim() 
       } else {
         inINIC = ""     
       }
@@ -61,11 +61,11 @@
     //******************************************************************** 
     // Get EXTINS record
     //******************************************************************** 
-    private Optional<DBContainer> findEXTINS(int cono, String inic){  
+    private Optional<DBContainer> findEXTINS(int CONO, String INIC){  
       DBAction query = database.table("EXTINS").index("00").build()
-      def EXTINS = query.getContainer()
-      EXTINS.set("EXCONO", cono)
-      EXTINS.set("EXINIC", inic)
+      DBContainer EXTINS = query.getContainer()
+      EXTINS.set("EXCONO", CONO)
+      EXTINS.set("EXINIC", INIC)
       if(query.read(EXTINS))  { 
         return Optional.of(EXTINS)
       } 

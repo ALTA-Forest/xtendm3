@@ -21,7 +21,7 @@
     private final ProgramAPI program
     private final LoggerAPI logger
   
-    int CONO
+    int inCONO
     String inGRAD
 
     // Constructor 
@@ -33,19 +33,19 @@
     } 
     
     public void main() { 
-       // Set Company Number
-       CONO = program.LDAZD.CONO as Integer
+      // Set Company Number
+      inCONO = program.LDAZD.CONO as Integer
   
        // Grade Code
-       if (mi.in.get("GRAD") != null) {
-          inGRAD = mi.in.get("GRAD") 
+       if (mi.in.get("GRAD") != null && mi.in.get("GRAD") != "") {
+          inGRAD = mi.inData.get("GRAD").trim() 
        } else {
           inGRAD = ""     
        }
   
   
        // Validate log grade record
-       Optional<DBContainer> EXTGRD = findEXTGRD(CONO, inGRAD)
+       Optional<DBContainer> EXTGRD = findEXTGRD(inCONO, inGRAD)
        if(!EXTGRD.isPresent()){
           mi.error("Log Grade doesn't exist")   
           return             
@@ -62,7 +62,7 @@
     //******************************************************************** 
     private Optional<DBContainer> findEXTGRD(int CONO, String GRAD){  
        DBAction query = database.table("EXTGRD").index("00").build()
-       def EXTGRD = query.getContainer()
+       DBContainer EXTGRD = query.getContainer()
        EXTGRD.set("EXCONO", CONO)
        EXTGRD.set("EXGRAD", GRAD)
        if(query.read(EXTGRD))  { 
@@ -79,7 +79,7 @@
     void deleteEXTGRDRecord(){ 
        DBAction action = database.table("EXTGRD").index("00").build()
        DBContainer EXTGRD = action.getContainer()
-       EXTGRD.set("EXCONO", CONO) 
+       EXTGRD.set("EXCONO", inCONO) 
        EXTGRD.set("EXGRAD", inGRAD)
        action.readLock(EXTGRD, deleterCallbackEXTGRD)
     }

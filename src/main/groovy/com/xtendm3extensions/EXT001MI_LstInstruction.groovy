@@ -39,11 +39,12 @@ public class LstInstruction extends ExtendM3Transaction {
   } 
     
   public void main() { 
+     // Set Company Number
      inCONO = program.LDAZD.CONO as Integer
     
      // Instruction Code
-     if (mi.in.get("INIC") != null) {
-        inINIC = mi.in.get("INIC") 
+     if (mi.in.get("INIC") != null && mi.in.get("INIC") != "") {
+        inINIC = mi.inData.get("INIC").trim() 
      } else {
         inINIC = ""     
      }
@@ -59,7 +60,6 @@ public class LstInstruction extends ExtendM3Transaction {
   void listInstruction(){ 
      DBAction action = database.table("EXTINS").index("00").selectAllFields().reverse().build()
      DBContainer ext = action.getContainer()
-      
      ext.set("EXCONO", inCONO)
      
      if (inINIC != "") {  

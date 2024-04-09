@@ -43,8 +43,8 @@ public class GetLogException extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Exception Code
-     if (mi.in.get("ECOD") != null) {
-        inECOD = mi.in.get("ECOD") 
+     if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
+        inECOD = mi.inData.get("ECOD").trim() 
      } else {
         inECOD = ""         
      }

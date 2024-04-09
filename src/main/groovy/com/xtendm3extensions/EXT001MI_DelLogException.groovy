@@ -21,7 +21,7 @@
     private final ProgramAPI program
     private final LoggerAPI logger
   
-    int CONO
+    int inCONO
     String inECOD
 
     // Constructor 
@@ -34,18 +34,18 @@
     
     public void main() { 
       // Set Company Number
-      CONO = program.LDAZD.CONO as Integer
+      inCONO = program.LDAZD.CONO as Integer
 
       // Exception Code
-      if (mi.in.get("ECOD") != null) {
-        inECOD = mi.in.get("ECOD") 
+      if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
+        inECOD = mi.inData.get("ECOD").trim() 
       } else {
         inECOD = ""     
       }
 
 
       // Validate log exception record
-      Optional<DBContainer> EXTEXC = findEXTEXC(CONO, inECOD)
+      Optional<DBContainer> EXTEXC = findEXTEXC(inCONO, inECOD)
       if(!EXTEXC.isPresent()){
         mi.error("Exception Code doesn't exist")   
         return             
@@ -63,7 +63,7 @@
     //******************************************************************** 
     private Optional<DBContainer> findEXTEXC(int CONO, String ECOD){  
       DBAction query = database.table("EXTEXC").index("00").build()
-      def EXTEXC = query.getContainer()
+      DBContainer EXTEXC = query.getContainer()
       EXTEXC.set("EXCONO", CONO)
       EXTEXC.set("EXECOD", ECOD)
       if(query.read(EXTEXC))  { 
@@ -80,7 +80,7 @@
     void deleteEXTEXCRecord(){ 
       DBAction action = database.table("EXTEXC").index("00").build()
       DBContainer EXTEXC = action.getContainer()
-      EXTEXC.set("EXCONO", CONO) 
+      EXTEXC.set("EXCONO", inCONO) 
       EXTEXC.set("EXECOD", inECOD)
       action.readLock(EXTEXC, deleterCallbackEXTEXC)
     }

@@ -39,11 +39,12 @@ public class LstLogGrade extends ExtendM3Transaction {
   } 
     
   public void main() { 
+     // Set Company Number
      inCONO = program.LDAZD.CONO as Integer
     
      // Exception Code
-     if (mi.in.get("GRAD") != null) {
-        inGRAD = mi.in.get("GRAD") 
+     if (mi.in.get("GRAD") != null && mi.in.get("GRAD") != "") {
+        inGRAD = mi.inData.get("GRAD").trim() 
      } else {
         inGRAD = ""     
      }
@@ -59,7 +60,6 @@ public class LstLogGrade extends ExtendM3Transaction {
   void listLogGrades(){ 
      DBAction action = database.table("EXTGRD").index("00").selectAllFields().reverse().build()
      DBContainer ext = action.getContainer()
-      
      ext.set("EXCONO", inCONO)
      
      if (inGRAD != "") {  
