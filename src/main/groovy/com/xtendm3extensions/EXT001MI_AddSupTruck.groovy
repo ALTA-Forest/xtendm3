@@ -39,24 +39,32 @@ public class AddSupTruck extends ExtendM3Transaction {
 
      // Supplier
      String inSUNO
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
+        
+        // Validate supplier if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inSUNO)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Supplier doesn't exist")   
+           return             
+        }
+
      } else {
         inSUNO = ""         
      }
       
      // Truck
      String inTRCK
-     if (mi.in.get("TRCK") != null) {
-        inTRCK = mi.in.get("TRCK") 
+     if (mi.in.get("TRCK") != null && mi.in.get("TRCK") != "") {
+        inTRCK = mi.inData.get("TRCK").trim() 
      } else {
         inTRCK = ""        
      }
      
     // Name
      String inTRNA
-     if (mi.in.get("TRNA") != null) {
-        inTRNA = mi.in.get("TRNA") 
+     if (mi.in.get("TRNA") != null && mi.in.get("TRNA") != "") {
+        inTRNA = mi.inData.get("TRNA").trim() 
      } else {
         inTRNA = ""        
      }
@@ -79,7 +87,7 @@ public class AddSupTruck extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTSTR(int cono, String suno, String trck){  
      DBAction query = database.table("EXTSTR").index("00").build()
-     def EXTSTR = query.getContainer()
+     DBContainer EXTSTR = query.getContainer()
      EXTSTR.set("EXCONO", cono)
      EXTSTR.set("EXSUNO", suno)
      EXTSTR.set("EXTRCK", trck)
@@ -89,6 +97,24 @@ public class AddSupTruck extends ExtendM3Transaction {
   
      return Optional.empty()
   }
+
+
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
   
   //******************************************************************** 
   // Add EXTSTR record 
@@ -99,11 +125,9 @@ public class AddSupTruck extends ExtendM3Transaction {
        EXTSTR.set("EXCONO", cono)
        EXTSTR.set("EXSUNO", suno)
        EXTSTR.set("EXTRCK", trck)
-       EXTSTR.set("EXTRNA", trna)
-   
+       EXTSTR.set("EXTRNA", trna) 
        EXTSTR.set("EXCHID", program.getUser())
-       EXTSTR.set("EXCHNO", 1) 
-          
+       EXTSTR.set("EXCHNO", 1)       
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")                    
        EXTSTR.set("EXRGDT", regdate) 

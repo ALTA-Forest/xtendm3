@@ -27,9 +27,9 @@
 
 
 public class GetSpecies extends ExtendM3Transaction {
-  private final MIAPI mi; 
-  private final DatabaseAPI database; 
-  private final ProgramAPI program;
+  private final MIAPI mi 
+  private final DatabaseAPI database 
+  private final ProgramAPI program
   
   int inCONO
   String inCATE
@@ -47,15 +47,15 @@ public class GetSpecies extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Category
-     if (mi.in.get("CATE") != null) {
-        inCATE = mi.in.get("CATE") 
+     if (mi.in.get("CATE") != null && mi.in.get("CATE") != "") {
+        inCATE = mi.inData.get("CATE").trim() 
      } else {
         inCATE = ""         
      }
 
      // Species
-     if (mi.in.get("SPEC") != null) {
-        inSPEC = mi.in.get("SPEC") 
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
+        inSPEC = mi.inData.get("SPEC").trim() 
      } else {
         inSPEC = ""         
      }

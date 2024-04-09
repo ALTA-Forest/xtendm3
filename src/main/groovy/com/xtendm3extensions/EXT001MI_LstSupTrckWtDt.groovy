@@ -12,7 +12,7 @@
  * IN
  * @param: SUNO - Supplier
  * @param: TRCK - Truck
- * @param: DLDT - Delivery Date
+ * @param: DLDT - Delivery Date 
  * 
 */
 
@@ -46,18 +46,19 @@ public class LstSupTrckWtDt extends ExtendM3Transaction {
   } 
     
   public void main() { 
+     // Set Company Number
      inCONO = program.LDAZD.CONO as Integer
     
      // Supplier
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
      } else {
         inSUNO = ""     
      }
 
      // Truck
-     if (mi.in.get("TRCK") != null) {
-        inTRCK = mi.in.get("TRCK") 
+     if (mi.in.get("TRCK") != null && mi.in.get("TRCK") != "") {
+        inTRCK = mi.inData.get("TRCK").trim() 
      } else {
         inTRCK = ""     
      }
@@ -79,13 +80,15 @@ public class LstSupTrckWtDt extends ExtendM3Transaction {
   //******************************************************************** 
   // List supplier truck weight history from EXTTWH
   //******************************************************************** 
-  void listSupplierTruckWeightHistory(){ 
+  void listSupplierTruckWeightHistory() { 
      DBAction query = database.table("EXTTWH").index("00").selectAllFields().build()
      DBContainer ext = query.getContainer()
      ext.set("EXCONO", inCONO)
      ext.set("EXSUNO", inSUNO)
      ext.set("EXTRCK", inTRCK)
-     query.readAll(ext, 3, releasedItemProcessor)
+     
+     int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+     query.readAll(ext, 3, pageSize, releasedItemProcessor)
   }
 
   Closure<?> releasedItemProcessor = { DBContainer ext -> 

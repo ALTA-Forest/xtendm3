@@ -6,7 +6,7 @@
 // This API is to list supplier trucks from EXTSTR
 // Transaction LstSupTruck
 // AFMNI-7/Alias Replacement
-// https://leanswift.atlassian.net/browse/AFMI-7
+// https://leanswift.atlassian.net/browse/AFMI-7 
 
 /**
  * IN
@@ -42,18 +42,19 @@ public class LstSupTruck extends ExtendM3Transaction {
   } 
     
   public void main() { 
+     // Set Company Number
      inCONO = program.LDAZD.CONO as Integer
     
      // Supplier
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
      } else {
         inSUNO = ""     
      }
 
      // Truck
-     if (mi.in.get("TRCK") != null) {
-        inTRCK = mi.in.get("TRCK") 
+     if (mi.in.get("TRCK") != null && mi.in.get("TRCK") != "") {
+        inTRCK = mi.inData.get("TRCK").trim() 
      } else {
         inTRCK = ""     
      }
@@ -71,37 +72,43 @@ public class LstSupTruck extends ExtendM3Transaction {
      if (inSUNO != "" && inTRCK != "") {  
         DBAction action = database.table("EXTSTR").index("00").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-      
         ext.set("EXCONO", inCONO)
         ext.set("EXSUNO", inSUNO)
         ext.set("EXTRCK", inTRCK)
 
-        action.readAll(ext, 3, releasedItemProcessor) 
+        if (action.read(ext)) {  
+          mi.outData.put("CONO", ext.get("EXCONO").toString())
+          mi.outData.put("SUNO", ext.getString("EXSUNO"))
+          mi.outData.put("TRCK", ext.getString("EXTRCK"))
+          mi.outData.put("TRNA", ext.getString("EXTRNA"))
+          mi.write()  
+        }
 
      } else if (inSUNO != "" && inTRCK == "") {
         DBAction action = database.table("EXTSTR").index("00").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-      
         ext.set("EXCONO", inCONO)
         ext.set("EXSUNO", inSUNO)
-     
-        action.readAll(ext, 2, releasedItemProcessor) 
+        
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
         
      } else if (inTRCK != "" && inSUNO == "") {
         DBAction action = database.table("EXTSTR").index("10").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
         ext.set("EXTRCK", inTRCK)
         
-        action.readAll(ext, 2, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
+        
      } else {
         DBAction action = database.table("EXTSTR").index("00").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
-
-        action.readAll(ext, 1, releasedItemProcessor) 
+        
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 1, pageSize, releasedItemProcessor) 
      } 
   }
 

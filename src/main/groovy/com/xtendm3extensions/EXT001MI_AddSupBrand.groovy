@@ -34,33 +34,41 @@ public class AddSupBrand extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     int CONO = program.LDAZD.CONO as Integer
+     int inCONO = program.LDAZD.CONO as Integer
 
      // Supplier
      String inSUNO
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
+        
+        // Validate supplier if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inSUNO)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Supplier doesn't exist")   
+           return             
+        }
+
      } else {
         inSUNO = ""         
      }
 
      // Brand
      String inBRND
-     if (mi.in.get("BRND") != null) {
-        inBRND = mi.in.get("BRND") 
+     if (mi.in.get("BRND") != null && mi.in.get("BRND") != "") {
+        inBRND = mi.inData.get("BRND").trim() 
      } else {
         inBRND = ""        
      }
      
       
      // Validate supplier brand record
-     Optional<DBContainer> EXTSBR = findEXTSBR(CONO, inSUNO, inBRND)
+     Optional<DBContainer> EXTSBR = findEXTSBR(inCONO, inSUNO, inBRND)
      if(EXTSBR.isPresent()){
         mi.error("Supplier Brand already exists")   
         return             
      } else {
         // Write record 
-        addEXTSBRRecord(CONO, inSUNO, inBRND)          
+        addEXTSBRRecord(inCONO, inSUNO, inBRND)          
      }  
 
   }
@@ -70,7 +78,7 @@ public class AddSupBrand extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTSBR(int CONO, String SUNO, String BRND){  
      DBAction query = database.table("EXTSBR").index("00").build()
-     def EXTSBR = query.getContainer()
+     DBContainer EXTSBR = query.getContainer()
      EXTSBR.set("EXCONO", CONO)
      EXTSBR.set("EXSUNO", SUNO)
      EXTSBR.set("EXBRND", BRND)
@@ -80,6 +88,24 @@ public class AddSupBrand extends ExtendM3Transaction {
   
      return Optional.empty()
   }
+
+
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
   
   //******************************************************************** 
   // Add EXTSBR record 
@@ -89,11 +115,9 @@ public class AddSupBrand extends ExtendM3Transaction {
        DBContainer EXTSBR = action.createContainer()
        EXTSBR.set("EXCONO", CONO)
        EXTSBR.set("EXSUNO", SUNO)
-       EXTSBR.set("EXBRND", BRND)
-   
+       EXTSBR.set("EXBRND", BRND)   
        EXTSBR.set("EXCHID", program.getUser())
-       EXTSBR.set("EXCHNO", 1) 
-          
+       EXTSBR.set("EXCHNO", 1)          
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")                    
        EXTSBR.set("EXRGDT", regdate) 

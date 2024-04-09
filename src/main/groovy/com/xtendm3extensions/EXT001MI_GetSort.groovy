@@ -44,8 +44,8 @@ public class GetSort extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Sort Code
-     if (mi.in.get("SORT") != null) {
-        inSORT = mi.in.get("SORT") 
+     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
+        inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT = ""         
      }

@@ -18,6 +18,7 @@
 */
 
 
+
 public class AddSpecies extends ExtendM3Transaction {
   private final MIAPI mi 
   private final DatabaseAPI database
@@ -36,49 +37,49 @@ public class AddSpecies extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     int CONO = program.LDAZD.CONO as Integer
+     int inCONO = program.LDAZD.CONO as Integer
      
      // Category
      String inCATE
-     if (mi.in.get("CATE") != null) {
-        inCATE = mi.in.get("CATE") 
+     if (mi.in.get("CATE") != null && mi.in.get("CATE") != "") {
+        inCATE = mi.inData.get("CATE").trim() 
      } else {
         inCATE = ""        
      }
      
      // Species
      String inSPEC
-     if (mi.in.get("SPEC") != null) {
-        inSPEC = mi.in.get("SPEC") 
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
+        inSPEC = mi.inData.get("SPEC").trim() 
      } else {
         inSPEC = ""         
      }
       
     // Name
      String inSPNA
-     if (mi.in.get("SPNA") != null) {
-        inSPNA = mi.in.get("SPNA") 
+     if (mi.in.get("SPNA") != null && mi.in.get("SPNA") != "") {
+        inSPNA = mi.inData.get("SPNA").trim() 
      } else {
         inSPNA = ""        
      }
      
      // Sort Code
      String inSORT
-     if (mi.in.get("SORT") != null) {
-        inSORT = mi.in.get("SORT") 
+     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
+        inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT = ""       
      }
 
 
      // Validate species record
-     Optional<DBContainer> EXTSPE = findEXTSPE(CONO, inCATE, inSPEC)
+     Optional<DBContainer> EXTSPE = findEXTSPE(inCONO, inCATE, inSPEC)
      if(EXTSPE.isPresent()){
         mi.error("Species already exists")   
         return             
      } else {
         // Write record 
-        addEXTSPERecord(CONO, inCATE, inSPEC, inSPNA, inSORT)          
+        addEXTSPERecord(inCONO, inCATE, inSPEC, inSPNA, inSORT)          
      }  
 
   }
@@ -89,7 +90,7 @@ public class AddSpecies extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTSPE(int CONO, String CATE, String SPEC){  
      DBAction query = database.table("EXTSPE").index("00").build()
-     def EXTSPE = query.getContainer()
+     DBContainer EXTSPE = query.getContainer()
      EXTSPE.set("EXCONO", CONO)
      EXTSPE.set("EXCATE", CATE)
      EXTSPE.set("EXSPEC", SPEC)
@@ -110,11 +111,9 @@ public class AddSpecies extends ExtendM3Transaction {
        EXTSPE.set("EXCATE", CATE)
        EXTSPE.set("EXSPEC", SPEC)
        EXTSPE.set("EXSPNA", SPNA)
-       EXTSPE.set("EXSORT", SORT)
-   
+       EXTSPE.set("EXSORT", SORT)   
        EXTSPE.set("EXCHID", program.getUser())
-       EXTSPE.set("EXCHNO", 1) 
-          
+       EXTSPE.set("EXCHNO", 1)         
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")                    
        EXTSPE.set("EXRGDT", regdate) 

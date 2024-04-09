@@ -48,15 +48,23 @@ public class AddSupTrckWtHis extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Supplier
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim()
+        
+        // Validate supplier if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inSUNO)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Supplier doesn't exist")   
+           return             
+        }
+
      } else {
         inSUNO = ""         
      }
       
      // Truck
-     if (mi.in.get("TRCK") != null) {
-        inTRCK = mi.in.get("TRCK") 
+     if (mi.in.get("TRCK") != null && mi.in.get("TRCK") != "") {
+        inTRCK = mi.inData.get("TRCK").trim() 
      } else {
         inTRCK = ""        
      }
@@ -71,6 +79,14 @@ public class AddSupTrckWtHis extends ExtendM3Transaction {
      // From Date
      if (mi.in.get("FRDT") != null) {
         inFRDT = mi.in.get("FRDT") 
+        
+        //Validate date format
+        boolean validFRDT = utility.call("DateUtil", "isDateValid", String.valueOf(inFRDT), "yyyyMMdd")  
+        if (!validFRDT) {
+           mi.error("From Date is not valid")   
+           return  
+        } 
+
      } else {
         inFRDT = 0        
      }
@@ -78,6 +94,14 @@ public class AddSupTrckWtHis extends ExtendM3Transaction {
      // To Date
      if (mi.in.get("TODT") != null) {
         inTODT = mi.in.get("TODT") 
+        
+        //Validate date format
+        boolean validTODT = utility.call("DateUtil", "isDateValid", String.valueOf(inTODT), "yyyyMMdd")  
+        if (!validTODT) {
+           mi.error("To Date is not valid")   
+           return  
+        } 
+
      } else {
         inTODT = 0        
      }
@@ -159,7 +183,7 @@ public class AddSupTrckWtHis extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTTWH(int cono, String suno, String trck, int frdt, int todt){  
      DBAction query = database.table("EXTTWH").index("00").build()
-     def EXTTWH = query.getContainer()
+     DBContainer EXTTWH = query.getContainer()
      EXTTWH.set("EXCONO", cono)
      EXTTWH.set("EXSUNO", suno)
      EXTTWH.set("EXTRCK", trck)
@@ -171,6 +195,24 @@ public class AddSupTrckWtHis extends ExtendM3Transaction {
   
      return Optional.empty()
   }
+
+
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
   
   //******************************************************************** 
   // Add EXTTWH record 
@@ -184,10 +226,8 @@ public class AddSupTrckWtHis extends ExtendM3Transaction {
        EXTTWH.set("EXTARE", tare)
        EXTTWH.set("EXFRDT", frdt)
        EXTTWH.set("EXTODT", todt)
-   
        EXTTWH.set("EXCHID", program.getUser())
        EXTTWH.set("EXCHNO", 1) 
-          
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")                    
        EXTTWH.set("EXRGDT", regdate) 

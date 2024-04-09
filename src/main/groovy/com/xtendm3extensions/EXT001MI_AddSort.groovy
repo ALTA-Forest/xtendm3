@@ -17,6 +17,7 @@
 */
 
 
+
 public class AddSort extends ExtendM3Transaction {
   private final MIAPI mi 
   private final DatabaseAPI database
@@ -35,40 +36,48 @@ public class AddSort extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     int CONO = program.LDAZD.CONO as Integer
+     int inCONO = program.LDAZD.CONO as Integer
 
      // Sort Code
      String inSORT
-     if (mi.in.get("SORT") != null) {
-        inSORT = mi.in.get("SORT") 
+     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
+        inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT = ""         
      }
       
      // Name
      String inSONA
-     if (mi.in.get("SONA") != null) {
-        inSONA = mi.in.get("SONA") 
+     if (mi.in.get("SONA") != null && mi.in.get("SONA") != "") {
+        inSONA = mi.inData.get("SONA").trim() 
      } else {
         inSONA = ""        
      }
      
     // Item Number
      String inITNO
-     if (mi.in.get("ITNO") != null) {
-        inITNO = mi.in.get("ITNO") 
+     if (mi.in.get("ITNO") != null && mi.in.get("ITNO") != "") {
+        inITNO = mi.inData.get("ITNO").trim() 
+        
+        // Validate item if entered
+        Optional<DBContainer> MITMAS = findMITMAS(inCONO, inITNO)
+        if (!MITMAS.isPresent()) {
+           mi.error("Item Number doesn't exist")   
+           return             
+        }
+
      } else {
         inITNO = ""        
      }
 
      // Validate sort record
-     Optional<DBContainer> EXTSOR = findEXTSOR(CONO, inSORT)
+     Optional<DBContainer> EXTSOR = findEXTSOR(inCONO, inSORT)
      if(EXTSOR.isPresent()){
         mi.error("Sort already exists")   
         return             
      } else {
         // Write record 
-        addEXTSORRecord(CONO, inSORT, inSONA, inITNO)          
+        addEXTSORRecord(inCONO, inSORT, inSONA, inITNO)          
      }  
 
   }
@@ -78,7 +87,7 @@ public class AddSort extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTSOR(int CONO, String SORT){  
      DBAction query = database.table("EXTSOR").index("00").build()
-     def EXTSOR = query.getContainer()
+     DBContainer EXTSOR = query.getContainer()
      EXTSOR.set("EXCONO", CONO)
      EXTSOR.set("EXSORT", SORT)
      if(query.read(EXTSOR))  { 
@@ -88,6 +97,24 @@ public class AddSort extends ExtendM3Transaction {
      return Optional.empty()
   }
   
+  
+  //******************************************************************** 
+  // Check Item
+  //******************************************************************** 
+  private Optional<DBContainer> findMITMAS(int CONO, String ITNO){  
+      DBAction query = database.table("MITMAS").index("00").build()   
+      DBContainer MITMAS = query.getContainer()
+      MITMAS.set("MMCONO", CONO)
+      MITMAS.set("MMITNO", ITNO)
+    
+      if(query.read(MITMAS))  { 
+        return Optional.of(MITMAS)
+      } 
+  
+      return Optional.empty()
+  }
+
+
   //******************************************************************** 
   // Add EXTSOR record 
   //********************************************************************     
@@ -97,11 +124,9 @@ public class AddSort extends ExtendM3Transaction {
        EXTSOR.set("EXCONO", CONO)
        EXTSOR.set("EXSORT", SORT)
        EXTSOR.set("EXSONA", SONA)
-       EXTSOR.set("EXITNO", ITNO)
-   
+       EXTSOR.set("EXITNO", ITNO)   
        EXTSOR.set("EXCHID", program.getUser())
-       EXTSOR.set("EXCHNO", 1) 
-          
+       EXTSOR.set("EXCHNO", 1)           
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")
        int regtime = utility.call("DateUtil", "currentTimeAsInt")                    
        EXTSOR.set("EXRGDT", regdate) 

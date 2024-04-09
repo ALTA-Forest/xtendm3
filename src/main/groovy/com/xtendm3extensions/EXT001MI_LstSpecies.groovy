@@ -11,7 +11,7 @@
 /**
  * IN
  * @param: CATE - Category
- * @param: SPEC - Species
+ * @param: SPEC - Species 
  * 
 */
 
@@ -44,25 +44,26 @@ public class LstSpecies extends ExtendM3Transaction {
   } 
     
   public void main() { 
+     // Set Company Number
      inCONO = program.LDAZD.CONO as Integer
     
      // Category
-     if (mi.in.get("CATE") != null) {
-        inCATE = mi.in.get("CATE") 
+     if (mi.in.get("CATE") != null && mi.in.get("CATE") != "") {
+        inCATE = mi.inData.get("CATE").trim() 
      } else {
         inCATE = ""     
      }
      
      // Species
-     if (mi.in.get("SPEC") != null) {
-        inSPEC = mi.in.get("SPEC") 
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
+        inSPEC = mi.inData.get("SPEC").trim() 
      } else {
         inSPEC = ""     
      }
 
      // Sort
-     if (mi.in.get("SORT") != null) {
-        inSORT = mi.in.get("SORT") 
+     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
+        inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT= ""     
      }
@@ -81,72 +82,83 @@ public class LstSpecies extends ExtendM3Transaction {
      if (inSPEC != "" && inCATE != "" && inSORT != "") {  
         DBAction action = database.table("EXTSPE").index("20").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-      
         ext.set("EXCONO", inCONO)
         ext.set("EXCATE", inCATE)
         ext.set("EXSPEC", inSPEC)
         ext.set("EXSORT", inSORT)
 
-        action.readAll(ext, 4, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 4, pageSize, releasedItemProcessor) 
 
      } else if (inSPEC != "" && inCATE == "" && inSORT == "") {
         DBAction action = database.table("EXTSPE").index("10").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-      
         ext.set("EXCONO", inCONO)
         ext.set("EXSPEC", inSPEC)
-     
-        action.readAll(ext, 2, releasedItemProcessor) 
+        
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
+        
      } else if (inSPEC != "" && inCATE != "" && inSORT == "") {
         DBAction action = database.table("EXTSPE").index("00").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-      
         ext.set("EXCONO", inCONO)
         ext.set("EXCATE", inCATE)
         ext.set("EXSPEC", inSPEC)
      
-        action.readAll(ext, 3, releasedItemProcessor) 
+        if (action.read(ext)) {  
+          mi.outData.put("CONO", ext.get("EXCONO").toString())
+          mi.outData.put("CATE", ext.getString("EXCATE"))
+          mi.outData.put("SPEC", ext.getString("EXSPEC"))      
+          mi.outData.put("SPNA", ext.getString("EXSPNA"))
+          mi.outData.put("SORT", ext.getString("EXSORT"))
+          mi.write()  
+        }
+        
      } else if (inCATE != "" && inSPEC == "" && inSORT == "") {
         DBAction action = database.table("EXTSPE").index("00").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
         ext.set("EXCATE", inCATE)
         
-        action.readAll(ext, 2, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
+        
      } else if (inCATE != "" && inSPEC == "" && inSORT != "") {
         DBAction action = database.table("EXTSPE").index("20").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
         ext.set("EXCATE", inCATE)
         ext.set("EXSORT", inSORT)
         
-        action.readAll(ext, 3, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 3, pageSize, releasedItemProcessor) 
+        
      } else if (inCATE == "" && inSPEC == "" && inSORT != "") {
         DBAction action = database.table("EXTSPE").index("20").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
         ext.set("EXSORT", inSORT)
         
-        action.readAll(ext, 2, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 2, pageSize, releasedItemProcessor) 
+        
      } else if (inCATE == "" && inSPEC != "" && inSORT != "") {
         DBAction action = database.table("EXTSPE").index("30").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
         ext.set("EXSORT", inSORT)
         ext.set("EXSPEC", inSPEC)
 
-        action.readAll(ext, 3, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 3, pageSize, releasedItemProcessor) 
      } else {
         DBAction action = database.table("EXTSPE").index("00").selectAllFields().reverse().build()
         DBContainer ext = action.getContainer()
-
         ext.set("EXCONO", inCONO)
 
-        action.readAll(ext, 1, releasedItemProcessor) 
+        int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()	 
+        action.readAll(ext, 1, pageSize, releasedItemProcessor) 
      } 
   }
 

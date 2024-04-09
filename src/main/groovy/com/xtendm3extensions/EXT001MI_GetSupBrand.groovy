@@ -45,15 +45,15 @@ public class GetSupBrand extends ExtendM3Transaction {
      inCONO = program.LDAZD.CONO as Integer
 
      // Supplier
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
      } else {
         inSUNO = ""         
      }
    
      // Brand
-     if (mi.in.get("BRND") != null) {
-        inBRND = mi.in.get("BRND") 
+     if (mi.in.get("BRND") != null && mi.in.get("BRND") != "") {
+        inBRND = mi.inData.get("BRND").trim() 
      } else {
         inBRND = ""         
      }
