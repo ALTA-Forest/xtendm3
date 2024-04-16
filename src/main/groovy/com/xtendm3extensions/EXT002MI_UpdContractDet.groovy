@@ -21,6 +21,7 @@
  * @param: TEPY - Payment Terms
  * @param: FRSC - Frequency Scaling
  * @param: CMNO - Compliance Number
+ * @param: PTDT - Permit Date
  * 
 */
 
@@ -51,6 +52,7 @@ public class UpdContractDet extends ExtendM3Transaction {
   boolean dateNotValid
   int firstRevisionDate
   int lastRevisionDate
+  int inPTDT
 
   // Constructor 
   public UpdContractDet(MIAPI mi, DatabaseAPI database, MICallerAPI miCaller, ProgramAPI program, UtilityAPI utility, LoggerAPI logger) {
@@ -83,6 +85,14 @@ public class UpdContractDet extends ExtendM3Transaction {
      // Valid From
      if (mi.in.get("VALF") != null) {
         inVALF = mi.in.get("VALF") 
+        
+        //Validate date format
+        boolean validVALF = utility.call("DateUtil", "isDateValid", String.valueOf(inVALF), "yyyyMMdd")  
+        if (!validVALF) {
+           mi.error("Valid From Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALF = 0        
      }
@@ -90,6 +100,14 @@ public class UpdContractDet extends ExtendM3Transaction {
      // Valid To
      if (mi.in.get("VALT") != null) {
         inVALT = mi.in.get("VALT") 
+        
+        //Validate date format
+        boolean validVALT = utility.call("DateUtil", "isDateValid", String.valueOf(inVALT), "yyyyMMdd")  
+        if (!validVALT) {
+           mi.error("Valid To Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALT = 0        
      }
@@ -102,8 +120,8 @@ public class UpdContractDet extends ExtendM3Transaction {
      }
  
      // Permit Type
-     if (mi.in.get("PTPC") != null) {
-        inPTPC = mi.in.get("PTPC") 
+     if (mi.in.get("PTPC") != null && mi.in.get("PTPC") != "") {
+        inPTPC = mi.inData.get("PTPC").trim() 
      } else {
         inPTPC = ""        
      }
@@ -116,8 +134,16 @@ public class UpdContractDet extends ExtendM3Transaction {
      }
   
      // Payment Terms
-     if (mi.in.get("TEPY") != null) {
-        inTEPY = mi.in.get("TEPY") 
+     if (mi.in.get("TEPY") != null && mi.in.get("TEPY") != "") {
+        inTEPY = mi.inData.get("TEPY").trim() 
+        
+        // Validate Payment Terms
+        Optional<DBContainer> CSYTAB = findCSYTAB(inCONO, inTEPY, "")
+        if (!CSYTAB.isPresent()) {
+           mi.error("Payment Terms doesn't exist")   
+           return  
+        } 
+
      } else {
         inTEPY = ""        
      }
@@ -128,11 +154,24 @@ public class UpdContractDet extends ExtendM3Transaction {
      }
 
      // Compliance Number
-     if (mi.in.get("CMNO") != null) {
-        inCMNO = mi.in.get("CMNO") 
+     if (mi.in.get("CMNO") != null && mi.in.get("CMNO") != "") {
+        inCMNO = mi.inData.get("CMNO").trim() 
      } else {
         inCMNO = ""        
      }
+     
+     // Expiration Date
+     if (mi.in.get("PTDT") != null) {
+        inPTDT = mi.in.get("PTDT") 
+        
+        //Validate date format
+        boolean validPTDT = utility.call("DateUtil", "isDateValid", String.valueOf(inPTDT), "yyyyMMdd")  
+        if (!validPTDT) {
+           mi.error("Permit Date is not valid")   
+           return  
+        } 
+
+     } 
 
 
      // Get contract detail record
@@ -258,6 +297,27 @@ public class UpdContractDet extends ExtendM3Transaction {
 
   }
 
+
+  //******************************************************************** 
+  // Check TEPY in CSYTAB
+  //******************************************************************** 
+ private Optional<DBContainer> findCSYTAB(Integer CONO, String STKY, String LNCD){  
+    DBAction query = database.table("CSYTAB").index("00").build()     
+    DBContainer CSYTAB = query.getContainer()
+    CSYTAB.set("CTCONO", CONO)
+    CSYTAB.set("CTDIVI", "")
+    CSYTAB.set("CTSTCO", "TEPY")
+    CSYTAB.set("CTSTKY", STKY)
+    CSYTAB.set("CTLNCD", LNCD)
+    
+    if(query.read(CSYTAB))  { 
+      return Optional.of(CSYTAB)
+    } 
+  
+    return Optional.empty()
+  }
+  
+  
   //******************************************************************** 
   // Get EXTCTD record
   //******************************************************************** 
@@ -314,13 +374,18 @@ public class UpdContractDet extends ExtendM3Transaction {
           lockedResult.set("EXTEPY", inTEPY)
        }
        
-       if (mi.in.get("FRSC") != null && mi.in.get("FRSC") != "") {
+       if (mi.in.get("FRSC") != null) {
           lockedResult.set("EXFRSC", mi.in.get("FRSC"))
        }
        
        if (inCMNO != "") {
           lockedResult.set("EXCMNO", inCMNO)
        }
+       
+       if (mi.in.get("PTDT") != null) {
+          lockedResult.set("EXPTDT", mi.in.get("PTDT"))
+       }
+
         
        int changeNo = lockedResult.get("EXCHNO")
        int newChangeNo = changeNo + 1 

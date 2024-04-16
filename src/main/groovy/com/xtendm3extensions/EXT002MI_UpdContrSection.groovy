@@ -75,7 +75,7 @@ public class UpdContrSection extends ExtendM3Transaction {
      }
 
      // Section Name
-     if (mi.inData.get("CSNA") != null) {
+     if (mi.in.get("CSNA") != null && mi.in.get("CSNA") != "") {
         inCSNA = mi.inData.get("CSNA").trim() 
      } else {
         inCSNA = ""        
@@ -132,7 +132,9 @@ public class UpdContrSection extends ExtendM3Transaction {
     EXTCDS.set("EXCONO", inCONO)
     EXTCDS.set("EXDIVI", inDIVI)
     EXTCDS.set("EXDSID", inDSID)
-    query.readAll(EXTCDS, 3, releasedItemProcessor)
+	
+	  int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()       
+    query.readAll(EXTCDS, 3, pageSize, releasedItemProcessor)
   }
 
   Closure<?> releasedItemProcessor = { DBContainer EXTCDS ->

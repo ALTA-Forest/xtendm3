@@ -92,6 +92,14 @@ public class AddContractDet extends ExtendM3Transaction {
      // Valid From
      if (mi.in.get("VALF") != null) {
         inVALF = mi.in.get("VALF") 
+        
+        //Validate date format
+        boolean validVALF = utility.call("DateUtil", "isDateValid", String.valueOf(inVALF), "yyyyMMdd")  
+        if (!validVALF) {
+           mi.error("Valid From Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALF = 0        
      }
@@ -99,6 +107,14 @@ public class AddContractDet extends ExtendM3Transaction {
      // Valid To
      if (mi.in.get("VALT") != null) {
         inVALT = mi.in.get("VALT") 
+        
+        //Validate date format
+        boolean validVALT = utility.call("DateUtil", "isDateValid", String.valueOf(inVALT), "yyyyMMdd")  
+        if (!validVALT) {
+           mi.error("Valid To Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALT = 0        
      }

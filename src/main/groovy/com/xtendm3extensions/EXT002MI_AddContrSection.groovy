@@ -73,7 +73,7 @@ public class AddContrSection extends ExtendM3Transaction {
 
      // Revision ID
      String inRVID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
@@ -89,7 +89,7 @@ public class AddContrSection extends ExtendM3Transaction {
 
      // Section Name
      String inCSNA  
-     if (mi.in.get("CSNA") != null) {
+     if (mi.in.get("CSNA") != null && mi.in.get("CSNA") != "") {
         inCSNA = mi.inData.get("CSNA").trim() 
      } else {
         inCSNA = ""      

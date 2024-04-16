@@ -57,8 +57,8 @@
      }
 
      // Revision ID
-     if (mi.in.get("RVID") != null) {
-        inRVID = mi.in.get("RVID") 
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
+        inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""      
      }
@@ -79,6 +79,7 @@
         deleteEXTCTIRecord()
         deleteEXTCTPRecord()
         deleteEXTCTSRecord()
+        deleteEXTCTTRecord()
         
        //Delete for each Section
        List<DBContainer> resultEXTCDS = listEXTCDS(inCONO, inDIVI, inRVID) 
@@ -269,6 +270,7 @@
   }
 
 
+
   //******************************************************************** 
   // Delete record in EXTCTD
   //******************************************************************** 
@@ -360,6 +362,25 @@
 
 
   //******************************************************************** 
+  // Delete record in EXTCTT - Contract Trip
+  //******************************************************************** 
+  void deleteEXTCTTRecord(){ 
+     DBAction action = database.table("EXTCTT").index("00").build()
+     DBContainer EXTCTT = action.getContainer()    
+     EXTCTT.set("EXCONO", inCONO) 
+     EXTCTT.set("EXDIVI", inDIVI) 
+     EXTCTT.set("EXCTNO", inCTNO)
+     EXTCTT.set("EXRVID", inRVID)
+
+     action.readAllLock(EXTCTT, 4, deleterCallbackEXTCTT)
+  }
+    
+  Closure<?> deleterCallbackEXTCTT = { LockedResult lockedResult ->  
+     lockedResult.delete()
+  }
+
+
+  //******************************************************************** 
   // Delete record in EXTCDS - Contract Sections
   //******************************************************************** 
   void deleteEXTCDSRecord(){ 
@@ -433,5 +454,6 @@
 
         miCaller.call("EXT002MI","DelSectionRate", params, callback)
    } 
+
 
  }

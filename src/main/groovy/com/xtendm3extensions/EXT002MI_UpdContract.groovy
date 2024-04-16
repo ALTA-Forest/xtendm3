@@ -90,22 +90,38 @@ public class UpdContract extends ExtendM3Transaction {
      }
 
      // Supplier
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
+        
+        // Validate supplier if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inSUNO)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Supplier doesn't exist")   
+           return             
+        }
+
      } else {
         inSUNO = ""        
      }
      
      // Contract Manager
-     if (mi.in.get("CTMG") != null) {
-        inCTMG = mi.in.get("CTMG") 
+     if (mi.in.get("CTMG") != null && mi.in.get("CTMG") != "") {
+        inCTMG = mi.inData.get("CTMG").trim()
+        
+        // Validate user if entered
+        Optional<DBContainer> CMNUSR = findCMNUSR(inCONO, inCTMG)
+        if (!CMNUSR.isPresent()) {
+           mi.error("Contract Manager doesn't exist")   
+           return             
+        }
+
      } else {
         inCTMG = ""        
      }
      
      // Deliver To Yard
-     if (mi.in.get("DLTY") != null) {
-        inDLTY = mi.in.get("DLTY") 
+     if (mi.in.get("DLTY") != null && mi.in.get("DLTY") != "") {
+        inDLTY = mi.inData.get("DLTY").trim() 
      } else {
         inDLTY = ""        
      }
@@ -121,8 +137,8 @@ public class UpdContract extends ExtendM3Transaction {
      }
      
      // Contract Title
-     if (mi.in.get("CTTI") != null) {
-        inCTTI = mi.in.get("CTTI") 
+     if (mi.in.get("CTTI") != null && mi.in.get("CTTI") != "") {
+        inCTTI = mi.inData.get("CTTI").trim() 
      } else {
         inCTTI = ""        
      }
@@ -130,6 +146,14 @@ public class UpdContract extends ExtendM3Transaction {
      // Valid From
      if (mi.in.get("VALF") != null) {
         inVALF = mi.in.get("VALF") 
+        
+        //Validate date format
+        boolean validVALF = utility.call("DateUtil", "isDateValid", String.valueOf(inVALF), "yyyyMMdd")  
+        if (!validVALF) {
+           mi.error("Valid From Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALF = 0      
      }
@@ -137,6 +161,14 @@ public class UpdContract extends ExtendM3Transaction {
      // Valid To
      if (mi.in.get("VALT") != null) {
         inVALT = mi.in.get("VALT") 
+        
+        //Validate date format
+        boolean validVALT = utility.call("DateUtil", "isDateValid", String.valueOf(inVALT), "yyyyMMdd")  
+        if (!validVALT) {
+           mi.error("Valid To Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALT = 0      
      }
@@ -159,8 +191,8 @@ public class UpdContract extends ExtendM3Transaction {
      }
   
      // Revision ID
-     if (mi.in.get("RVID") != null) {
-        inRVID = mi.in.get("RVID") 
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
+        inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""        
      }
@@ -183,7 +215,7 @@ public class UpdContract extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTCTH(int CONO, String DIVI, int CTNO){  
      DBAction query = database.table("EXTCTH").index("00").build()
-     def EXTCTH = query.getContainer()
+     DBContainer EXTCTH = query.getContainer()
      EXTCTH.set("EXCONO", CONO)
      EXTCTH.set("EXDIVI", DIVI)
      EXTCTH.set("EXCTNO", CTNO)
@@ -194,6 +226,41 @@ public class UpdContract extends ExtendM3Transaction {
      return Optional.empty()
   }
   
+  
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+   
+   
+   //******************************************************************** 
+   // Check User
+   //******************************************************************** 
+   private Optional<DBContainer> findCMNUSR(int CONO, String USID){  
+     DBAction query = database.table("CMNUSR").index("00").build()   
+     DBContainer CMNUSR = query.getContainer()
+     CMNUSR.set("JUCONO", 0)
+     CMNUSR.set("JUDIVI", "")
+     CMNUSR.set("JUUSID", USID)
+    
+     if(query.read(CMNUSR))  { 
+       return Optional.of(CMNUSR)
+     } 
+  
+     return Optional.empty()
+   }
+
 
   //******************************************************************** 
   // Update EXTCTH record

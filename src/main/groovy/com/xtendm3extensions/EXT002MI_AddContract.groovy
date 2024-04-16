@@ -90,23 +90,39 @@ public class AddContract extends ExtendM3Transaction {
       
      // Supplier
      String inSUNO
-     if (mi.in.get("SUNO") != null) {
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
         inSUNO = mi.inData.get("SUNO").trim() 
+        
+        // Validate supplier if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inSUNO)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Supplier doesn't exist")   
+           return             
+        }
+
      } else {
         inSUNO = ""        
      }
      
      // Contract Manager
      String inCTMG  
-     if (mi.in.get("CTMG") != null) {
+     if (mi.in.get("CTMG") != null && mi.in.get("CTMG") != "") {
         inCTMG = mi.inData.get("CTMG").trim() 
+        
+        // Validate user if entered
+        Optional<DBContainer> CMNUSR = findCMNUSR(inCONO, inCTMG)
+        if (!CMNUSR.isPresent()) {
+           mi.error("Contract Manager doesn't exist")   
+           return             
+        }
+
      } else {
         inCTMG = ""        
      }
 
      // Deliver To Yard
      String inDLTY 
-     if (mi.in.get("DLTY") != null) {
+     if (mi.in.get("DLTY") != null && mi.in.get("DLTY") != "") {
         inDLTY = mi.inData.get("DLTY").trim() 
      } else {
         inDLTY = ""        
@@ -130,7 +146,7 @@ public class AddContract extends ExtendM3Transaction {
      
      // Contract Title
      String inCTTI
-     if (mi.in.get("CTTI") != null) {
+     if (mi.in.get("CTTI") != null && mi.in.get("CTTI") != "") {
         inCTTI = mi.inData.get("CTTI").trim() 
      } else {
         inCTTI = ""        
@@ -140,6 +156,14 @@ public class AddContract extends ExtendM3Transaction {
      int inVALF
      if (mi.in.get("VALF") != null) {
         inVALF = mi.in.get("VALF") 
+        
+        //Validate date format
+        boolean validVALF = utility.call("DateUtil", "isDateValid", String.valueOf(inVALF), "yyyyMMdd")  
+        if (!validVALF) {
+           mi.error("Valid From Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALF = 0        
      }
@@ -148,6 +172,14 @@ public class AddContract extends ExtendM3Transaction {
      int inVALT
      if (mi.in.get("VALT") != null) {
         inVALT = mi.in.get("VALT") 
+        
+        //Validate date format
+        boolean validVALT = utility.call("DateUtil", "isDateValid", String.valueOf(inVALT), "yyyyMMdd")  
+        if (!validVALT) {
+           mi.error("Valid To Date is not valid")   
+           return  
+        } 
+
      } else {
         inVALT = 0        
      }
@@ -167,7 +199,7 @@ public class AddContract extends ExtendM3Transaction {
      
      // Supplier Name
      String inSUNM
-     if (mi.in.get("SUNM") != null) {
+     if (mi.in.get("SUNM") != null && mi.in.get("SUNM") != "") {
         inSUNM = mi.inData.get("SUNM").trim() 
      } else {
         inSUNM = ""        
@@ -259,6 +291,41 @@ public class AddContract extends ExtendM3Transaction {
   }
   
   
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
+
+   //******************************************************************** 
+   // Check User
+   //******************************************************************** 
+   private Optional<DBContainer> findCMNUSR(int CONO, String USID){  
+     DBAction query = database.table("CMNUSR").index("00").build()   
+     DBContainer CMNUSR = query.getContainer()
+     CMNUSR.set("JUCONO", 0)
+     CMNUSR.set("JUDIVI", "")
+     CMNUSR.set("JUUSID", USID)
+    
+     if(query.read(CMNUSR))  { 
+       return Optional.of(CMNUSR)
+     } 
+  
+     return Optional.empty()
+   }
+
+  
    //***************************************************************************** 
    // Get next number in the number serie using CRS165MI.RtvNextNumber    
    // Input 
@@ -268,7 +335,7 @@ public class AddContract extends ExtendM3Transaction {
    //***************************************************************************** 
    void getNextNumber(String division, String numberSeriesType, String numberSeries){   
         Map<String, String> params = [DIVI: division, NBTY: numberSeriesType, NBID: numberSeries] 
-        def callback = {
+        Closure<?> callback = {
         Map<String, String> response ->
           if(response.NBNR != null){
             nextNumber = response.NBNR

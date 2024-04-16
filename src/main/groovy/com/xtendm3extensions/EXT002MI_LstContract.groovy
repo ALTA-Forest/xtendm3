@@ -65,7 +65,7 @@ public class LstContract extends ExtendM3Transaction {
      }
 
      // Set Division
-     if (mi.in.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null && mi.in.get("DIVI") != "") {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
@@ -79,7 +79,7 @@ public class LstContract extends ExtendM3Transaction {
      }
 
      // Supplier
-     if (mi.in.get("SUNO") != null) {
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
         inSUNO = mi.inData.get("SUNO").trim() 
      } else {
         inSUNO = ""     

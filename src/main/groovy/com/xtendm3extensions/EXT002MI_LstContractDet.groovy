@@ -32,7 +32,7 @@
  * @return: FRSC - Frequency Scaling
  * @return: RVID - Revision ID
  * @return: CMNO - Compliance Number
- * 
+ * @return: PTDT - Permit Date
 */
 
 public class LstContractDet extends ExtendM3Transaction {
@@ -64,7 +64,7 @@ public class LstContractDet extends ExtendM3Transaction {
      }
 
      // Set Division
-     if (mi.in.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null && mi.in.get("DIVI") != "") {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
@@ -78,7 +78,7 @@ public class LstContractDet extends ExtendM3Transaction {
      }
 
      // Revision ID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""     
@@ -155,7 +155,8 @@ public class LstContractDet extends ExtendM3Transaction {
       mi.outData.put("TEPY", line.getString("EXTEPY")) 
       mi.outData.put("FRSC", line.get("EXFRSC").toString())
       mi.outData.put("RVID", line.getString("EXRVID")) 
-      mi.outData.put("CMNO", line.getString("EXCMNO"))  
+      mi.outData.put("CMNO", line.getString("EXCMNO"))
+      mi.outData.put("PTDT", line.get("EXPTDT").toString())
       mi.write() 
   } 
 

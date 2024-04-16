@@ -59,14 +59,14 @@ public class LstContrSection extends ExtendM3Transaction {
      }
 
      // Set Division
-     if (mi.in.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null && mi.in.get("DIVI") != "") {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
      }
  
      // Revision ID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""     
