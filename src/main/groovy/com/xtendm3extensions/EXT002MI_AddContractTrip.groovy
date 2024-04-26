@@ -65,7 +65,7 @@ public class AddContractTrip extends ExtendM3Transaction {
 
      // Revision ID
      String inRVID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.in.get("RVID") 
      } else {
         inRVID = ""         
@@ -73,7 +73,7 @@ public class AddContractTrip extends ExtendM3Transaction {
 
      // Deliver From Yard
      String inDLFY
-     if (mi.in.get("DLFY") != null) {
+     if (mi.in.get("DLFY") != null && mi.in.get("DLFY") != "") {
         inDLFY = mi.in.get("DLFY") 
      } else {
         inDLFY = ""         
@@ -81,7 +81,7 @@ public class AddContractTrip extends ExtendM3Transaction {
      
      // Deliver To Yard
      String inDLTY
-     if (mi.in.get("DLTY") != null) {
+     if (mi.in.get("DLTY") != null && mi.in.get("DLTY") != "") {
         inDLTY = mi.in.get("DLTY") 
      } else {
         inDLTY = ""         
@@ -123,7 +123,7 @@ public class AddContractTrip extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTCTT(int CONO, String DIVI, int CTNO, String RVID, String DLFY, String DLTY){  
      DBAction query = database.table("EXTCTT").index("00").build()
-     def EXTCTT = query.getContainer()
+     DBContainer EXTCTT = query.getContainer()
      EXTCTT.set("EXCONO", CONO)
      EXTCTT.set("EXDIVI", DIVI)
      EXTCTT.set("EXCTNO", CTNO)

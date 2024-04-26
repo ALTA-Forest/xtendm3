@@ -69,7 +69,7 @@ public class AddContrStatus extends ExtendM3Transaction {
 
      // Revision ID
      String inRVID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
@@ -93,7 +93,7 @@ public class AddContrStatus extends ExtendM3Transaction {
 
      // Module
      String inMDUL  
-     if (mi.in.get("MDUL") != null) {
+     if (mi.in.get("MDUL") != null && mi.in.get("MDUL") != "") {
         inMDUL = mi.inData.get("MDUL").trim() 
      } else {
         inMDUL = ""      
@@ -103,21 +103,37 @@ public class AddContrStatus extends ExtendM3Transaction {
      int inCSDT  
      if (mi.in.get("CSDT") != null) {
         inCSDT = mi.in.get("CSDT") 
+        
+        //Validate date format
+        boolean validCSDT = utility.call("DateUtil", "isDateValid", String.valueOf(inCSDT), "yyyyMMdd")  
+        if (!validCSDT) {
+           mi.error("Date is not valid")   
+           return  
+        } 
+
      } else {
         inCSDT = 0        
      }
 
      // Updated By
      String inUSID  
-     if (mi.in.get("USID") != null) {
+     if (mi.in.get("USID") != null && mi.in.get("USID") != "") {
         inUSID = mi.inData.get("USID").trim() 
+        
+        // Validate user if entered
+        Optional<DBContainer> CMNUSR = findCMNUSR(inCONO, inUSID)
+        if (!CMNUSR.isPresent()) {
+           mi.error("User doesn't exist")   
+           return             
+        }
+
      } else {
         inUSID = ""        
      }
 
      // Note
      String inNOTE
-     if (mi.in.get("NOTE") != null) {
+     if (mi.in.get("NOTE") != null && mi.in.get("NOTE") != "") {
         inNOTE = mi.inData.get("NOTE").trim() 
      } else {
         inNOTE = ""        
@@ -201,6 +217,25 @@ public class AddContrStatus extends ExtendM3Transaction {
   
      return Optional.empty()
   }
+
+
+  //******************************************************************** 
+  // Check User
+  //******************************************************************** 
+  private Optional<DBContainer> findCMNUSR(int CONO, String USID){  
+     DBAction query = database.table("CMNUSR").index("00").build()   
+     DBContainer CMNUSR = query.getContainer()
+     CMNUSR.set("JUCONO", 0)
+     CMNUSR.set("JUDIVI", "")
+     CMNUSR.set("JUUSID", USID)
+    
+     if(query.read(CMNUSR))  { 
+       return Optional.of(CMNUSR)
+     } 
+  
+     return Optional.empty()
+  }
+
   
   //******************************************************************** 
   // Add EXTCTS record 

@@ -28,6 +28,7 @@
  * @return: TNLB - Total Net lbs
  * @return: TNBF - Total Net bf
  * @return: AVBL - Average bf/lbs
+ * @return: AMNT - Amount
  * 
 */
 
@@ -79,8 +80,8 @@ public class GetContractLoad extends ExtendM3Transaction {
      }
 
      // Revision ID
-     if (mi.in.get("RVID") != null) {
-        inRVID = mi.in.get("RVID") 
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
+        inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
      }
@@ -95,8 +96,6 @@ public class GetContractLoad extends ExtendM3Transaction {
   void getRecord(){      
      DBAction action = database.table("EXTCTL").index("00").selectAllFields().build()
      DBContainer EXTCTL = action.getContainer()
-      
-     // Key value for read
      EXTCTL.set("EXCONO", inCONO)
      EXTCTL.set("EXDIVI", inDIVI)
      EXTCTL.set("EXDLNO", inDLNO)
@@ -113,11 +112,11 @@ public class GetContractLoad extends ExtendM3Transaction {
       mi.outData.put("TNLB", EXTCTL.getDouble("EXTNLB").toString())
       mi.outData.put("TNBF", EXTCTL.getDouble("EXTNBF").toString())
       mi.outData.put("AVBL", EXTCTL.getDouble("EXAVBL").toString())
+      mi.outData.put("AMNT", EXTCTL.getDouble("EXAMNT").toString())
       mi.write() 
     } else {
       mi.error("No record found")   
       return 
     }
   }  
-  
 }

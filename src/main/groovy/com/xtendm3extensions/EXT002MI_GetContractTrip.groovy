@@ -75,21 +75,21 @@ public class GetContractTrip extends ExtendM3Transaction {
      }
      
      // Revision ID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""      
      }
 
      // Deliver From Yard
-     if (mi.in.get("DLFY") != null) {
+     if (mi.in.get("DLFY") != null && mi.in.get("DLFY") != "") {
         inDLFY = mi.inData.get("DLFY").trim() 
      } else {
         inDLFY = ""      
      }
 
      // Deliver To Yard
-     if (mi.in.get("DLTY") != null) {
+     if (mi.in.get("DLTY") != null && mi.in.get("DLTY") != "") {
         inDLTY = mi.inData.get("DLTY").trim() 
      } else {
         inDLTY = ""      

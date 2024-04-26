@@ -50,8 +50,8 @@
   
        // Revision ID
        String inRVID      
-       if (mi.in.get("RVID") != null) {
-          inRVID = mi.in.get("RVID") 
+       if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
+          inRVID = mi.inData.get("RVID").trim() 
        } else {
           inRVID = ""     
        }

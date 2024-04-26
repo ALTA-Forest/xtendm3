@@ -28,6 +28,7 @@
  * @return: TNLB - Total Net lbs
  * @return: TNBF - Total Net bf
  * @return: AVBL - Average bf/lbs
+ * @return: AMNT - Amount
  * 
 */
 
@@ -48,21 +49,20 @@ public class LstContractLoad extends ExtendM3Transaction {
   // Constructor 
   public LstContractLoad(MIAPI mi, DatabaseAPI database, ProgramAPI program, LoggerAPI logger) {
      this.mi = mi
-     this.database = database 
+     this.database = database
      this.program = program
      this.logger = logger
   } 
     
   public void main() { 
      // Set Company Number
-     if (mi.in.get("CONO") != null) {
-        inCONO = mi.in.get("CONO") 
-     } else {
-        inCONO = 0      
-     }
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
+     } 
 
      // Set Division
-     if (mi.in.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null && mi.in.get("DIVI") != "") {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
@@ -83,7 +83,7 @@ public class LstContractLoad extends ExtendM3Transaction {
      }
     
      // Revision ID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""     
@@ -149,17 +149,19 @@ public class LstContractLoad extends ExtendM3Transaction {
        }
      }
 
-
+     
      DBAction actionline = database.table("EXTCTL").index("00").matching(expression).selectAllFields().build()
 	   DBContainer line = actionline.getContainer()   
      
+     line.set("EXCONO", inCONO)
+
      int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()      
-     actionline.readAll(line, 0, pageSize, releasedLineProcessor)               
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)               
+
    } 
 
 
     Closure<?> releasedLineProcessor = { DBContainer line -> 
-      // Send output value  
       mi.outData.put("CONO", line.get("EXCONO").toString())
       mi.outData.put("DIVI", line.getString("EXDIVI"))
       mi.outData.put("DLNO", line.get("EXDLNO").toString())
@@ -168,6 +170,7 @@ public class LstContractLoad extends ExtendM3Transaction {
       mi.outData.put("TNLB", line.getDouble("EXTNLB").toString())
       mi.outData.put("TNBF", line.getDouble("EXTNBF").toString())
       mi.outData.put("AVBL", line.getDouble("EXAVBL").toString())
+      mi.outData.put("AMNT", line.getDouble("EXAMNT").toString())
       mi.write() 
    } 
    

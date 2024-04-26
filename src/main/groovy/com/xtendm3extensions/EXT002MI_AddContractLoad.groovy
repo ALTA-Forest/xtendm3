@@ -18,6 +18,7 @@
  * @param: TNLB - Total Net lbs
  * @param: TNBF - Total Net bf
  * @param: AVBL - Average bf/lbs
+ * @param: AMNT - Amount
  * 
 */
 
@@ -74,7 +75,7 @@ public class AddContractLoad extends ExtendM3Transaction {
 
      // Revision ID
      String inRVID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
@@ -103,6 +104,14 @@ public class AddContractLoad extends ExtendM3Transaction {
      } else {
         inAVBL = 0d        
      }
+     
+     // Amount
+     double inAMNT  
+     if (mi.in.get("AMNT") != null) {
+        inAMNT = mi.in.get("AMNT") 
+     } else {
+        inAMNT = 0d        
+     }
  
 
      // Validate Contract Load record
@@ -112,7 +121,7 @@ public class AddContractLoad extends ExtendM3Transaction {
         return             
      } else {
         // Write record 
-        addEXTCTLRecord(inCONO, inDIVI, inDLNO, inCTNO, inRVID, inTNLB, inTNBF, inAVBL)          
+        addEXTCTLRecord(inCONO, inDIVI, inDLNO, inCTNO, inRVID, inTNLB, inTNBF, inAVBL, inAMNT)          
      }  
 
   }
@@ -140,7 +149,7 @@ public class AddContractLoad extends ExtendM3Transaction {
   //******************************************************************** 
   // Add EXTCTL record 
   //********************************************************************     
-  void addEXTCTLRecord(int CONO, String DIVI, int DLNO, int CTNO, String RVID, double TNLB, double TNBF, double AVBL){     
+  void addEXTCTLRecord(int CONO, String DIVI, int DLNO, int CTNO, String RVID, double TNLB, double TNBF, double AVBL, double AMNT){     
        DBAction action = database.table("EXTCTL").index("00").build()
        DBContainer EXTCTL = action.createContainer()
        EXTCTL.set("EXCONO", CONO)
@@ -150,7 +159,8 @@ public class AddContractLoad extends ExtendM3Transaction {
        EXTCTL.set("EXRVID", RVID)
        EXTCTL.set("EXTNLB", TNLB)
        EXTCTL.set("EXTNBF", TNBF)
-       EXTCTL.set("EXAVBL", AVBL)   
+       EXTCTL.set("EXAVBL", AVBL)
+       EXTCTL.set("EXAMNT", AMNT)   
        EXTCTL.set("EXCHID", program.getUser())
        EXTCTL.set("EXCHNO", 1) 
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")

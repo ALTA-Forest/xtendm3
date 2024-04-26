@@ -45,8 +45,8 @@ public class CpyContrTemp extends ExtendM3Transaction {
   private final UtilityAPI utility
   
   // Definition 
-  Integer CONO
-  String DIVI
+  Integer inCONO
+  String inDIVI
   String inRVID
   int inCTNO
   int outCTNO 
@@ -93,15 +93,15 @@ public class CpyContrTemp extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     CONO = mi.in.get("CONO")      
-     if (CONO == null || CONO == 0) {
-        CONO = program.LDAZD.CONO as Integer
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
      } 
 
      // Set Division
-     DIVI = mi.in.get("DIVI")
-     if (DIVI == null || DIVI == "") {
-        DIVI = program.LDAZD.DIVI
+     inDIVI = mi.in.get("DIVI")
+     if (inDIVI == null || inDIVI == "") {
+        inDIVI = program.LDAZD.DIVI
      }
 
      // Contract Type
@@ -110,22 +110,30 @@ public class CpyContrTemp extends ExtendM3Transaction {
      } 
 
      // Supplier
-     if (mi.in.get("SUNO") != null) {
-        inSUNO = mi.in.get("SUNO") 
+     if (mi.in.get("SUNO") != null && mi.in.get("SUNO") != "") {
+        inSUNO = mi.inData.get("SUNO").trim() 
+        
+        // Validate supplier if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inSUNO)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Supplier doesn't exist")   
+           return             
+        }
+
      } else {
         inSUNO = ""        
      }
      
      // Contract Manager
-     if (mi.in.get("CTMG") != null) {
-        inCTMG = mi.in.get("CTMG") 
+     if (mi.in.get("CTMG") != null && mi.in.get("CTMG") != "") {
+        inCTMG = mi.inData.get("CTMG").trim() 
      } else {
         inCTMG = ""        
      }
 
      // Deliver To Yard
-     if (mi.in.get("DLTY") != null) {
-        inDLTY = mi.in.get("DLTY") 
+     if (mi.in.get("DLTY") != null && mi.in.get("DLTY") != "") {
+        inDLTY = mi.inData.get("DLTY").trim() 
      } else {
         inDLTY = ""        
      }
@@ -136,8 +144,8 @@ public class CpyContrTemp extends ExtendM3Transaction {
      }
      
      // Contract Title
-     if (mi.in.get("CTTI") != null) {
-        inCTTI = mi.in.get("CTTI") 
+     if (mi.in.get("CTTI") != null && mi.in.get("CTTI") != "") {
+        inCTTI = mi.inData.get("CTTI").trim() 
      } else {
         inCTTI = ""        
      }
@@ -145,16 +153,32 @@ public class CpyContrTemp extends ExtendM3Transaction {
      // Valid From
      if (mi.in.get("VALF") != null) {
         inVALF = mi.in.get("VALF") 
+        
+        //Validate date format
+        boolean validVALF = utility.call("DateUtil", "isDateValid", String.valueOf(inVALF), "yyyyMMdd")  
+        if (!validVALF) {
+           mi.error("Valid From Date is not valid")   
+           return  
+        } 
+
      }
      
      // Valid To
      if (mi.in.get("VALT") != null) {
         inVALT = mi.in.get("VALT") 
+        
+        //Validate date format
+        boolean validVALT = utility.call("DateUtil", "isDateValid", String.valueOf(inVALT), "yyyyMMdd")  
+        if (!validVALT) {
+           mi.error("Valid To Date is not valid")   
+           return  
+        } 
+
      }
      
      // Supplier Name
-     if (mi.in.get("SUNM") != null) {
-        inSUNM = mi.in.get("SUNM") 
+     if (mi.in.get("SUNM") != null && mi.in.get("SUNM") != "") {
+        inSUNM = mi.inData.get("SUNM").trim() 
      } else {
         inSUNM = ""        
      }
@@ -184,18 +208,17 @@ public class CpyContrTemp extends ExtendM3Transaction {
      String outRVID = String.valueOf(outCTNO) + String.valueOf(outRVNO)
 
      // Validate contract header
-     Optional<DBContainer> EXTCTH = findEXTCTH(CONO, DIVI, inCTNO)
+     Optional<DBContainer> EXTCTH = findEXTCTH(inCONO, inDIVI, inCTNO)
      if (EXTCTH.isPresent()) {
         // Record found, get header information from contract to be copied to new contract template 
         DBContainer containerEXTCTH = EXTCTH.get() 
-        logger.info("Header found")
      } else {
         mi.error("Contract Number doesn't exist in Contract Header table")   
         return  
      }
 
      // Get contract detail record from entered revision
-     Optional<DBContainer> EXTCTD = findEXTCTD(CONO, DIVI, inRVID)
+     Optional<DBContainer> EXTCTD = findEXTCTD(inCONO, inDIVI, inRVID)
      if (EXTCTD.isPresent()) {
        // Record found, get detail information from contract  
        DBContainer containerEXTCTD = EXTCTD.get() 
@@ -209,20 +232,20 @@ public class CpyContrTemp extends ExtendM3Transaction {
      }
 
       //Copy Instructions for the revisions
-      List<DBContainer> resultEXTCTI = listEXTCTI(CONO, DIVI, inRVID) 
-      for (DBContainer RecLineEXTCTI : resultEXTCTI){ 
-        String revisionInstructionCodeString = RecLineEXTCTI.getString("EXINIC")
-        String displayOrderString = RecLineEXTCTI.get("EXDPOR")
+      List<DBContainer> resultEXTCTI = listEXTCTI(inCONO, inDIVI, inRVID) 
+      for (DBContainer recLineEXTCTI : resultEXTCTI){ 
+        String revisionInstructionCodeString = recLineEXTCTI.getString("EXINIC")
+        String displayOrderString = recLineEXTCTI.get("EXDPOR")
 
-        addInstructionSpecMI(String.valueOf(CONO), DIVI, outRVID, revisionInstructionCodeString, displayOrderString)   
+        addInstructionSpecMI(String.valueOf(inCONO), inDIVI, outRVID, revisionInstructionCodeString, displayOrderString)   
       }
 
      // Write record 
-     addEXTCTHRecord(CONO, DIVI, outCTNO, inCTYP, inCTMG, inDLTY, inCFI5, inVALF, inVALT, inCTTI, inSUNO, inSUNM, outRVID)  
-     addEXTCTDRecord(CONO, DIVI, outCTNO, inPTPC, inRTPC, inTEPY, inFRSC, inCMNO, inVALF, inVALT, outRVID)    
+     addEXTCTHRecord(inCONO, inDIVI, outCTNO, inCTYP, inCTMG, inDLTY, inCFI5, inVALF, inVALT, inCTTI, inSUNO, inSUNM, outRVID)  
+     addEXTCTDRecord(inCONO, inDIVI, outCTNO, inPTPC, inRTPC, inTEPY, inFRSC, inCMNO, inVALF, inVALT, outRVID)    
      
      //Copy Sections
-     List<DBContainer> resultEXTCDS = listEXTCDS(CONO, DIVI, inRVID) 
+     List<DBContainer> resultEXTCDS = listEXTCDS(inCONO, inDIVI, inRVID) 
      for (DBContainer recLineEXTCDS : resultEXTCDS){ 
         String revisionIDString = recLineEXTCDS.get("EXRVID")
         String sectionIDString = recLineEXTCDS.get("EXDSID")
@@ -235,38 +258,39 @@ public class CpyContrTemp extends ExtendM3Transaction {
         String sectionGradeString = recLineEXTCDS.get("EXCSGR")
         String sectionExceptionString = recLineEXTCDS.get("EXCSEX")
         String lengthIncrementString = recLineEXTCDS.get("EXCSLI")
+        String frequencyScalingString = recLineEXTCDS.get("EXFRSC")
 
-        addContractSectionMI(String.valueOf(CONO), DIVI, outRVID, sectionNumberString, sectionNameString, displayOrderString, speciesString, sectionGradeString, sectionExceptionString, lengthIncrementString)   
+        addContractSectionMI(String.valueOf(inCONO), inDIVI, outRVID, sectionNumberString, sectionNameString, displayOrderString, speciesString, sectionGradeString, sectionExceptionString, lengthIncrementString, frequencyScalingString)   
         
         //Copy Species for each section
-        List<DBContainer> resultEXTCSS = listEXTCSS(CONO, DIVI, sectionID) 
+        List<DBContainer> resultEXTCSS = listEXTCSS(inCONO, inDIVI, sectionID) 
         for (DBContainer recLineEXTCSS : resultEXTCSS){ 
           String sectionIDSpeciesString = recLineEXTCSS.get("EXDSID")
           String speciesNameString = recLineEXTCSS.get("EXSPEC")
 
-          addSectionSpecMI(String.valueOf(CONO), DIVI, newSectionIDString, speciesNameString)   
+          addSectionSpecMI(String.valueOf(inCONO), inDIVI, newSectionIDString, speciesNameString)   
         }
 
         //Copy Sections Grades for each section
-        List<DBContainer> resultEXTCSG = listEXTCSG(CONO, DIVI, sectionID) 
+        List<DBContainer> resultEXTCSG = listEXTCSG(inCONO, inDIVI, sectionID) 
         for (DBContainer recLineEXTCSG : resultEXTCSG){ 
           String sectionIDGradesString = recLineEXTCSG.get("EXDSID")
           String gradeCodeString = recLineEXTCSG.get("EXGRAD")
 
-          addSectionGradeMI(String.valueOf(CONO), DIVI, newSectionIDString, gradeCodeString)   
+          addSectionGradeMI(String.valueOf(inCONO), inDIVI, newSectionIDString, gradeCodeString)   
         }
  
         //Copy Sections Exceptions for each section
-        List<DBContainer> resultEXTCSE = listEXTCSE(CONO, DIVI, sectionID) 
+        List<DBContainer> resultEXTCSE = listEXTCSE(inCONO, inDIVI, sectionID) 
         for (DBContainer recLineEXTCSE : resultEXTCSE){ 
           String sectionIDExceptionString = recLineEXTCSE.get("EXDSID")
           String exceptionCodeString = recLineEXTCSE.get("EXECOD")
 
-          addSectionExeptionMI(String.valueOf(CONO), DIVI, newSectionIDString, exceptionCodeString)   
+          addSectionExeptionMI(String.valueOf(inCONO), inDIVI, newSectionIDString, exceptionCodeString)   
         }
 
         //Copy Sections Rate for each section
-        List<DBContainer> resultEXTCSR = listEXTCSR(CONO, DIVI, sectionID) 
+        List<DBContainer> resultEXTCSR = listEXTCSR(inCONO, inDIVI, sectionID) 
         for (DBContainer recLineEXTCSR : resultEXTCSR){ 
           String sectionIDRateString = recLineEXTCSR.get("EXDSID")
           String rateSeqString = recLineEXTCSR.get("EXCRSQ")
@@ -277,13 +301,13 @@ public class CpyContrTemp extends ExtendM3Transaction {
           String amountString = recLineEXTCSR.get("EXCRRA")
           String noteString = recLineEXTCSR.get("EXCRNO")
     
-          addSectionRateMI(String.valueOf(CONO), DIVI, newSectionIDString, rateSeqString, minLengthString, maxLengthString, minDiamString, maxDiamString, amountString, noteString)   
+          addSectionRateMI(String.valueOf(inCONO), inDIVI, newSectionIDString, rateSeqString, minLengthString, maxLengthString, minDiamString, maxDiamString, amountString, noteString)   
         }
 
      }
 
-     mi.outData.put("CONO", String.valueOf(CONO)) 
-     mi.outData.put("DIVI", DIVI) 
+     mi.outData.put("CONO", String.valueOf(inCONO)) 
+     mi.outData.put("DIVI", inDIVI) 
      mi.outData.put("CTNO", String.valueOf(outCTNO)) 
      mi.outData.put("RVID", outRVID) 
      mi.write()
@@ -323,6 +347,21 @@ public class CpyContrTemp extends ExtendM3Transaction {
      return Optional.empty()
   }
   
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
   
   //******************************************************************** 
   // Read records from instruction table EXTCTI
@@ -371,8 +410,8 @@ public class CpyContrTemp extends ExtendM3Transaction {
    //***************************************************************************** 
    // Add Contract Section
    //***************************************************************************** 
-   void addContractSectionMI(String company, String division, String revisionID, String sectionID, String sectionName, String displayOrder, String species, String sectionGrade, String sectionException, String lengthIncrement){   
-        Map<String, String> params = [CONO: company, DIVI: division, RVID: revisionID, CSSN: sectionID, CSNA: sectionName, DPOR: displayOrder, CSSP: species, CSGR: sectionGrade, CSEX: sectionException, CSLI: lengthIncrement] 
+   void addContractSectionMI(String company, String division, String revisionID, String sectionID, String sectionName, String displayOrder, String species, String sectionGrade, String sectionException, String lengthIncrement, String frequencyScaling){   
+        Map<String, String> params = [CONO: company, DIVI: division, RVID: revisionID, CSSN: sectionID, CSNA: sectionName, DPOR: displayOrder, CSSP: species, CSGR: sectionGrade, CSEX: sectionException, CSLI: lengthIncrement, FRSC: frequencyScaling] 
         Closure<?> callback = {
           Map<String, String> response ->
           if(response.DSID != null){
@@ -495,7 +534,7 @@ public class CpyContrTemp extends ExtendM3Transaction {
   // Add EXTCTD record 
   //********************************************************************     
   void addEXTCTDRecord(int CONO, String DIVI, int CTNO, String PTPC, String RTPC, String TEPY, int FRSC, String CMNO, int VALF, int VALT, String RVID){     
-       DBAction action = database.table("EXTCTD").index("00").selectAllFields().build()
+       DBAction action = database.table("EXTCTD").index("00").build()
        DBContainer EXTCTD = action.createContainer()
        EXTCTD.set("EXCONO", CONO)
        EXTCTD.set("EXDIVI", DIVI)
@@ -564,7 +603,7 @@ public class CpyContrTemp extends ExtendM3Transaction {
     EXTCDS.set("EXDIVI", DIVI)
     EXTCDS.set("EXRVID", RVID)
     
-	int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()        
+	  int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()        
     query.readAll(EXTCDS, 3, pageSize, { DBContainer recordEXTCDS ->  
        recLineEXTCDS.add(recordEXTCDS.createCopy()) 
     })
@@ -587,7 +626,7 @@ public class CpyContrTemp extends ExtendM3Transaction {
     EXTCSS.set("EXDIVI", DIVI)
     EXTCSS.set("EXDSID", DSID)
     
-	int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()        
+	  int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()        
     query.readAll(EXTCSS, 3, pageSize, { DBContainer recordEXTCSS ->  
        recLineEXTCSS.add(recordEXTCSS.createCopy()) 
     })

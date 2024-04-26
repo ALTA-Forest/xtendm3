@@ -3,7 +3,7 @@
 // @version   1.0 
 //
 // Description 
-// This API is to update section rate in EXTCTL
+// This API is to update contract load in EXTCTL
 // Transaction UpdContractLoad
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
@@ -11,15 +11,14 @@
 /**
  * IN
  * @param: CONO - Company Number
- * @param: DIVI - Division Number
- * @param: DSID - Section ID
- * @param: CRSQ - Rate Sequence
- * @param: CRML - Min Length
- * @param: CRXL - Max Length
- * @param: CRMD - Min Diameter
- * @param: CRXD - Max Diameter
- * @param: CRRA - Amount
- * @param: CRNO - Note
+ * @param: DIVI - Division
+ * @param: DLNO - Delivery Number
+ * @param: CTNO - Contract Number
+ * @param: RVID - Revision ID
+ * @param: TNLB - Total Net lbs
+ * @param: TNBF - Total Net bf
+ * @param: AVBL - Average bf/lbs
+ * @param: AMNT - Amount
  * 
 */
 
@@ -41,6 +40,7 @@ public class UpdContractLoad extends ExtendM3Transaction {
   double inTNLB  
   double inTNBF  
   double inAVBL  
+  double inAMNT  
 
   
   // Constructor 
@@ -81,7 +81,7 @@ public class UpdContractLoad extends ExtendM3Transaction {
      }
 
      // Revision ID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.in.get("RVID") 
      } else {
         inRVID = ""        
@@ -100,6 +100,11 @@ public class UpdContractLoad extends ExtendM3Transaction {
      // Average bf/lbs
      if (mi.in.get("AVBL") != null) {
         inAVBL = mi.in.get("AVBL") 
+     }
+
+     // Average bf/lbs
+     if (mi.in.get("AMNT") != null) {
+        inAMNT = mi.in.get("AMNT") 
      } 
      
      // Validate Contract Load record
@@ -119,7 +124,7 @@ public class UpdContractLoad extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTCTL(int CONO, String DIVI, int DLNO, int CTNO, String RVID){  
      DBAction query = database.table("EXTCTL").index("00").build()
-     def EXTCTL = query.getContainer()
+     DBContainer EXTCTL = query.getContainer()
      EXTCTL.set("EXCONO", CONO)
      EXTCTL.set("EXDIVI", DIVI)
      EXTCTL.set("EXDLNO", DLNO)
@@ -150,18 +155,22 @@ public class UpdContractLoad extends ExtendM3Transaction {
      }
    
      Closure<?> updateCallBackEXTCTL = { LockedResult lockedResult -> 
-       if (inTNLB != null && inTNLB != "") {
+       if (inTNLB != null) {
           lockedResult.set("EXTNLB", inTNLB)
        }
   
-       if (inTNBF != null && inTNBF != "") {
+       if (inTNBF != null) {
           lockedResult.set("EXTNBF", inTNBF)
        }
        
-       if (inAVBL != null && inAVBL != "") {  
+       if (inAVBL != null) {  
           lockedResult.set("EXAVBL", inAVBL)
        }
-
+       
+       if (inAMNT != null) {  
+          lockedResult.set("EXAMNT", inAMNT)
+       }
+  
        int changeNo = lockedResult.get("EXCHNO")
        int newChangeNo = changeNo + 1 
        int changeddate = utility.call("DateUtil", "currentDateY8AsInt")
@@ -169,7 +178,8 @@ public class UpdContractLoad extends ExtendM3Transaction {
        lockedResult.set("EXCHNO", newChangeNo) 
        lockedResult.set("EXCHID", program.getUser())
        lockedResult.update()
-  }
+    }
+
 
 } 
 

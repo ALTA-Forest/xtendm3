@@ -40,6 +40,7 @@ public class UpdContractTrip extends ExtendM3Transaction {
   double inTRRA
   double inMTRA  
   
+  
   // Constructor 
   public UpdContractTrip(MIAPI mi, DatabaseAPI database, MICallerAPI miCaller, ProgramAPI program, UtilityAPI utility, LoggerAPI logger) {
      this.mi = mi
@@ -69,21 +70,21 @@ public class UpdContractTrip extends ExtendM3Transaction {
      }
 
      // Revision ID
-     if (mi.in.get("RVID") != null) {
-        inRVID = mi.in.get("RVID") 
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
+        inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
      }
 
      // Deliver From Yard
-     if (mi.in.get("DLFY") != null) {
-        inDLFY = mi.in.get("DLFY") 
+     if (mi.in.get("DLFY") != null && mi.in.get("DLFY") != "") {
+        inDLFY = mi.inData.get("DLFY").trim() 
      } else {
         inDLFY = ""         
      }
      
      // Deliver To Yard
-     if (mi.in.get("DLTY") != null) {
+     if (mi.in.get("DLTY") != null && mi.in.get("DLTY") != "") {
         inDLTY = mi.in.get("DLTY") 
      } else {
         inDLTY = ""         
@@ -117,7 +118,7 @@ public class UpdContractTrip extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTCTT(int CONO, String DIVI, int CTNO, String RVID, String DLFY, String DLTY){  
      DBAction query = database.table("EXTCTT").index("00").build()
-     def EXTCTT = query.getContainer()
+     DBContainer EXTCTT = query.getContainer()
      EXTCTT.set("EXCONO", CONO)
      EXTCTT.set("EXDIVI", DIVI)
      EXTCTT.set("EXCTNO", CTNO)

@@ -30,18 +30,17 @@
 */
 
 
-import java.time.LocalDateTime;  
-import java.time.format.DateTimeFormatter;
 
 public class UpdContrPayee extends ExtendM3Transaction {
-  private final MIAPI mi; 
-  private final DatabaseAPI database;
-  private final MICallerAPI miCaller;
-  private final ProgramAPI program;
-  private final LoggerAPI logger;
+  private final MIAPI mi 
+  private final DatabaseAPI database
+  private final MICallerAPI miCaller
+  private final ProgramAPI program
+  private final UtilityAPI utility
+  private final LoggerAPI logger
   
-  Integer CONO
-  String DIVI
+  Integer inCONO
+  String inDIVI
   String inRVID
   int inCPID
   String inCASN
@@ -61,30 +60,31 @@ public class UpdContrPayee extends ExtendM3Transaction {
   
   
   // Constructor 
-  public UpdContrPayee(MIAPI mi, DatabaseAPI database, MICallerAPI miCaller, ProgramAPI program, LoggerAPI logger) {
-     this.mi = mi;
-     this.database = database;
-     this.miCaller = miCaller;
-     this.program = program;
-     this.logger = logger;     
+  public UpdContrPayee(MIAPI mi, DatabaseAPI database, MICallerAPI miCaller, ProgramAPI program, UtilityAPI utility, LoggerAPI logger) {
+     this.mi = mi
+     this.database = database
+     this.miCaller = miCaller
+     this.program = program
+     this.utility = utility
+     this.logger = logger     
   } 
     
   public void main() {       
      // Set Company Number
-     CONO = mi.in.get("CONO")      
-     if (CONO == null || CONO == 0) {
-        CONO = program.LDAZD.CONO as Integer
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
      } 
 
      // Set Division
-     DIVI = mi.in.get("DIVI")
-     if (DIVI == null || DIVI == "") {
-        DIVI = program.LDAZD.DIVI
+     inDIVI = mi.in.get("DIVI")
+     if (inDIVI == null || inDIVI == "") {
+        inDIVI = program.LDAZD.DIVI
      }
 
      // Revision ID
-     if (mi.in.get("RVID") != null) {
-        inRVID = mi.in.get("RVID") 
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
+        inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
      }
@@ -97,15 +97,23 @@ public class UpdContrPayee extends ExtendM3Transaction {
      }
       
      // Payee Number
-     if (mi.in.get("CASN") != null) {
-        inCASN = mi.in.get("CASN") 
+     if (mi.in.get("CASN") != null && mi.in.get("CASN") != "") {
+        inCASN = mi.inData.get("CASN").trim() 
+        
+        // Validate payee if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inCASN)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Payee doesn't exist")   
+           return             
+        }
+
      } else {
         inCASN = ""         
      }
     
      // Payee Name
-     if (mi.in.get("PYNM") != null) {
-        inPYNM = mi.in.get("PYNM") 
+     if (mi.in.get("PYNM") != null && mi.in.get("PYNM") != "") {
+        inPYNM = mi.inData.get("PYNM").trim() 
      } else {
         inPYNM = ""         
      }
@@ -125,15 +133,15 @@ public class UpdContrPayee extends ExtendM3Transaction {
      }
     
      // Take From ID
-     if (mi.in.get("CATF") != null) {
-        inCATF = mi.in.get("CATF") 
+     if (mi.in.get("CATF") != null && mi.in.get("CATF") != "") {
+        inCATF = mi.inData.get("CATF").trim() 
      } else {
         inCATF = ""         
      }    
 
      // Take From Name
-     if (mi.in.get("TFNM") != null) {
-        inTFNM = mi.in.get("TFNM") 
+     if (mi.in.get("TFNM") != null && mi.in.get("TFNM") != "") {
+        inTFNM = mi.inData.get("TFNM").trim() 
      } else {
         inTFNM = ""         
      }
@@ -188,21 +196,15 @@ public class UpdContrPayee extends ExtendM3Transaction {
      }  
      
      // Truck
-     if (mi.in.get("TRCK") != null) {
-        inTRCK = mi.in.get("TRCK") 
+     if (mi.in.get("TRCK") != null && mi.in.get("TRCK") != "") {
+        inTRCK = mi.inData.get("TRCK").trim() 
      } else {
         inTRCK = ""         
      }
 
-
-     logger.info("CONO ${CONO}")
-     logger.info("DIVI ${DIVI}")
-     logger.info("inRVID ${inRVID}")
-     logger.info("inCASN ${inCASN}")
-     logger.info("inCF15 ${inCF15}")
      
      // Validate contract payee record
-     Optional<DBContainer> EXTCTP = findEXTCTP(CONO, DIVI, inRVID, inCPID)
+     Optional<DBContainer> EXTCTP = findEXTCTP(inCONO, inDIVI, inRVID, inCPID)
      if(!EXTCTP.isPresent()){
         mi.error("Contract Payee doesn't exist")   
         return             
@@ -219,17 +221,11 @@ public class UpdContrPayee extends ExtendM3Transaction {
   //******************************************************************** 
   private Optional<DBContainer> findEXTCTP(int CONO, String DIVI, String RVID, int CPID){  
      DBAction query = database.table("EXTCTP").index("00").build()
-     def EXTCTP = query.getContainer()
+     DBContainer EXTCTP = query.getContainer()
      EXTCTP.set("EXCONO", CONO)
      EXTCTP.set("EXDIVI", DIVI)
      EXTCTP.set("EXRVID", RVID)
      EXTCTP.set("EXCPID", CPID)
-     
-     //logger.info("CONO ${CONO}")
-     //logger.info("DIVI ${DIVI}")
-     //logger.info("inRVID ${RVID}")
-     //logger.info("inCASN ${CASN}")
-     //logger.info("inCF15 ${CF15}")
 
      if(query.read(EXTCTP))  { 
        return Optional.of(EXTCTP)
@@ -239,16 +235,31 @@ public class UpdContrPayee extends ExtendM3Transaction {
   }
   
 
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
+
   //******************************************************************** 
   // Update EXTCTP record
   //********************************************************************    
-  void updEXTCTPRecord(){ 
-     
+  void updEXTCTPRecord(){      
      DBAction action = database.table("EXTCTP").index("00").build()
-     DBContainer EXTCTP = action.getContainer()
-     
-     EXTCTP.set("EXCONO", CONO)
-     EXTCTP.set("EXDIVI", DIVI)
+     DBContainer EXTCTP = action.getContainer()     
+     EXTCTP.set("EXCONO", inCONO)
+     EXTCTP.set("EXDIVI", inDIVI)
      EXTCTP.set("EXRVID", inRVID)
      EXTCTP.set("EXCPID", inCPID)
 
@@ -257,81 +268,70 @@ public class UpdContrPayee extends ExtendM3Transaction {
      }
    
      Closure<?> updateCallBackEXTCTP = { LockedResult lockedResult -> 
+       if (inCASN != "") {
+          lockedResult.set("EXCASN", inCASN)
+       }
+       
+       if (inCF15 != 0) {
+          lockedResult.set("EXCF15", inCF15)
+       }
+       
+       if (inPYNM != "") {
+          lockedResult.set("EXSUNM", inPYNM)
+       }
+  
+       if (inSHTP != "") {
+          lockedResult.set("EXSHTP", inSHTP)
+       }
+  
+       if (inCATF != "") {
+          lockedResult.set("EXCATF", inCATF)
+       }
+  
+       if (inTFNM != "") {
+          lockedResult.set("EXTFNM", inTFNM)
+       }
+  
+       if (inCATP != 0) {
+          lockedResult.set("EXCATP", inCATP)
+       }
+  
+       if (inCAAM != 0) {
+          lockedResult.set("EXCAAM", inCAAM)
+       }
+  
+       if (inCASA != 0) {
+          lockedResult.set("EXCASA", inCASA)
+       }
+       
+       if (inPLVL != 0) {
+          lockedResult.set("EXPLVL", inPLVL)
+       }
+  
+       if (inSLVL != 0) {
+          lockedResult.set("EXSLVL", inSLVL)
+       }
+  
+       if (inPPID != 0) {
+          lockedResult.set("EXPPID", inPPID)
+       }
+  
+       if (inISAH != 0) {
+          lockedResult.set("EXISAH", inISAH)
+       }
+       
+       if (inTRCK != "") {
+          lockedResult.set("EXTRCK", inTRCK)
+       }
 
-     if (inCASN != "") {
-        lockedResult.set("EXCASN", inCASN)
-     }
-     
-     if (inCF15 != 0) {
-        lockedResult.set("EXCF15", inCF15)
-     }
-     
-     if (inPYNM != "") {
-        lockedResult.set("EXSUNM", inPYNM)
-     }
-
-     if (inSHTP != "") {
-        lockedResult.set("EXSHTP", inSHTP)
-     }
-
-     if (inCATF != "") {
-        lockedResult.set("EXCATF", inCATF)
-     }
-
-     if (inTFNM != "") {
-        lockedResult.set("EXTFNM", inTFNM)
-     }
-
-     if (inCATP != 0) {
-        lockedResult.set("EXCATP", inCATP)
-     }
-
-     if (inCAAM != 0) {
-        lockedResult.set("EXCAAM", inCAAM)
-     }
-
-     if (inCASA != 0) {
-        lockedResult.set("EXCASA", inCASA)
-     }
-     
-     if (inPLVL != 0) {
-        lockedResult.set("EXPLVL", inPLVL)
-     }
-
-     if (inSLVL != 0) {
-        lockedResult.set("EXSLVL", inSLVL)
-     }
-
-     if (inPPID != 0) {
-        lockedResult.set("EXPPID", inPPID)
-     }
-
-     if (inISAH != 0) {
-        lockedResult.set("EXISAH", inISAH)
-     }
-     
-     if (inTRCK != "") {
-        lockedResult.set("EXTRCK", inTRCK)
-     }
-
-
-      // Get todays date
-     LocalDateTime now = LocalDateTime.now();    
-     DateTimeFormatter format1 = DateTimeFormatter.ofPattern("yyyyMMdd");  
-     String formatDate = now.format(format1);    
-     
-     int changeNo = lockedResult.get("EXCHNO")
-     int newChangeNo = changeNo + 1 
-     
-     // Update changed information
-     int changeddate=Integer.parseInt(formatDate);   
-     lockedResult.set("EXLMDT", changeddate)  
-      
-     lockedResult.set("EXCHNO", newChangeNo) 
-     lockedResult.set("EXCHID", program.getUser())
-     lockedResult.update()
+       int changeNo = lockedResult.get("EXCHNO")
+       int newChangeNo = changeNo + 1 
+       int changeddate = utility.call("DateUtil", "currentDateY8AsInt")
+       lockedResult.set("EXLMDT", changeddate)       
+       lockedResult.set("EXCHNO", newChangeNo) 
+       lockedResult.set("EXCHID", program.getUser())
+       lockedResult.update()
   }
-
 
 } 
 

@@ -78,7 +78,7 @@ public class AddContrPayee extends ExtendM3Transaction {
 
      // Revision ID
      String inRVID
-     if (mi.in.get("RVID") != null) {
+     if (mi.in.get("RVID") != null && mi.in.get("RVID") != "") {
         inRVID = mi.inData.get("RVID").trim() 
      } else {
         inRVID = ""         
@@ -86,15 +86,23 @@ public class AddContrPayee extends ExtendM3Transaction {
       
      // Payee Number
      String inCASN
-     if (mi.in.get("CASN") != null) {
+     if (mi.in.get("CASN") != null && mi.in.get("CASN") != "") {
         inCASN = mi.inData.get("CASN").trim() 
+        
+        // Validate payee if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inCASN)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Payee doesn't exist")   
+           return             
+        }
+
      } else {
         inCASN = ""         
      }
     
      // Payee Name
      String inPYNM
-     if (mi.in.get("PYNM") != null) {
+     if (mi.in.get("PYNM") != null && mi.in.get("PYNM") != "") {
         inPYNM = mi.inData.get("PYNM").trim() 
      } else {
         inPYNM = ""         
@@ -110,7 +118,7 @@ public class AddContrPayee extends ExtendM3Transaction {
      
      // Share Type
      String inSHTP
-     if (mi.in.get("SHTP") != null) {
+     if (mi.in.get("SHTP") != null && mi.in.get("SHTP") != "") {
         inSHTP = mi.inData.get("SHTP").trim() 
      } else {
         inSHTP = ""         
@@ -118,7 +126,7 @@ public class AddContrPayee extends ExtendM3Transaction {
     
      // Take From ID
      String inCATF
-     if (mi.in.get("CATF") != null) {
+     if (mi.in.get("CATF") != null && mi.in.get("CATF") != "") {
         inCATF = mi.inData.get("CATF").trim() 
      } else {
         inCATF = ""         
@@ -126,7 +134,7 @@ public class AddContrPayee extends ExtendM3Transaction {
 
      // Take From Name
      String inTFNM
-     if (mi.in.get("TFNM") != null) {
+     if (mi.in.get("TFNM") != null && mi.in.get("TFNM") != "") {
         inTFNM = mi.inData.get("TFNM").trim() 
      } else {
         inTFNM = ""         
@@ -190,7 +198,7 @@ public class AddContrPayee extends ExtendM3Transaction {
 
      // Truck
      String inTRCK
-     if (mi.in.get("TRCK") != null) {
+     if (mi.in.get("TRCK") != null && mi.in.get("TRCK") != "") {
         inTRCK = mi.inData.get("TRCK").trim() 
      } else {
         inTRCK = ""         
@@ -276,6 +284,24 @@ public class AddContrPayee extends ExtendM3Transaction {
      return Optional.empty()
   }
   
+  
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
+
   //******************************************************************** 
   // Add EXTCTP record 
   //********************************************************************     
