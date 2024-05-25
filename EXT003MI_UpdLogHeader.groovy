@@ -86,19 +86,21 @@ public class UpdLogHeader extends ExtendM3Transaction {
      } 
  
       // Species
-     if (mi.in.get("SPEC") != null) {
-        inSPEC = mi.in.get("SPEC") 
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
+        inSPEC = mi.inData.get("SPEC").trim() 
+     } else {
+        inSPEC = ""
      }
      
      // Exception Code
-     if (mi.in.get("ECOD") != null) {
+     if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
         inECOD = mi.in.get("ECOD") 
      } else {
         inECOD = ""        
      }
 
      // Tag Number
-     if (mi.in.get("TGNO") != null) {
+     if (mi.in.get("TGNO") != null && mi.in.get("TGNO") != "") {
         inTGNO = mi.in.get("TGNO") 
      } else {
         inTGNO = ""        

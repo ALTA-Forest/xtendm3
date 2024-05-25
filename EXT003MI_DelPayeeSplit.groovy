@@ -68,8 +68,8 @@
      
      // Item Number
      String inITNO
-     if (mi.in.get("ITNO") != null) {
-        inITNO = mi.in.get("ITNO") 
+     if (mi.in.get("ITNO") != null && mi.in.get("ITNO") != "") {
+        inITNO = mi.inData.get("ITNO").trim() 
      } else {
         inITNO = ""      
      }

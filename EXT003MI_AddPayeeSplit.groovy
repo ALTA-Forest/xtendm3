@@ -78,8 +78,16 @@ public class AddPayeeSplit extends ExtendM3Transaction {
 
      // Item Number
      String inITNO
-     if (mi.in.get("ITNO") != null) {
-        inITNO = mi.in.get("ITNO") 
+     if (mi.in.get("ITNO") != null && mi.in.get("ITNO") != "") {
+        inITNO = mi.inData.get("ITNO").trim() 
+        
+        // Validate item if entered
+        Optional<DBContainer> MITMAS = findMITMAS(inCONO, inITNO)
+        if (!MITMAS.isPresent()) {
+           mi.error("Item Number doesn't exist")   
+           return             
+        }
+
      } else {
         inITNO = ""         
      }
@@ -94,16 +102,24 @@ public class AddPayeeSplit extends ExtendM3Transaction {
 
      // Payee Number
      String inCASN
-     if (mi.in.get("CASN") != null) {
-        inCASN = mi.in.get("CASN") 
+     if (mi.in.get("CASN") != null && mi.in.get("CASN") != "") {
+        inCASN = mi.inData.get("CASN").trim() 
+        
+        // Validate payee if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inCASN)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Payee doesn't exist")   
+           return             
+        }
+
      } else {
         inCASN = ""         
      }
 
      // Payee Name
      String inSUNM
-     if (mi.in.get("SUNM") != null) {
-        inSUNM = mi.in.get("SUNM") 
+     if (mi.in.get("SUNM") != null && mi.in.get("SUNM") != "") {
+        inSUNM = mi.inData.get("SUNM").trim() 
      } else {
         inSUNM = ""         
      }
@@ -118,8 +134,8 @@ public class AddPayeeSplit extends ExtendM3Transaction {
 
      // Cost Element
      String inSUCM
-     if (mi.in.get("SUCM") != null) {
-        inSUCM = mi.in.get("SUCM") 
+     if (mi.in.get("SUCM") != null && mi.in.get("SUCM") != "") {
+        inSUCM = mi.inData.get("SUCM").trim() 
      } else {
         inSUCM = ""         
      }
@@ -173,6 +189,41 @@ public class AddPayeeSplit extends ExtendM3Transaction {
   
      return Optional.empty()
   }
+
+
+  //******************************************************************** 
+  // Check Item
+  //******************************************************************** 
+  private Optional<DBContainer> findMITMAS(int CONO, String ITNO){  
+      DBAction query = database.table("MITMAS").index("00").build()   
+      DBContainer MITMAS = query.getContainer()
+      MITMAS.set("MMCONO", CONO)
+      MITMAS.set("MMITNO", ITNO)
+    
+      if(query.read(MITMAS))  { 
+        return Optional.of(MITMAS)
+      } 
+  
+      return Optional.empty()
+  }
+  
+  
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
   
   //******************************************************************** 
   // Add EXTDPS record 

@@ -96,24 +96,24 @@ public class AddLogHeader extends ExtendM3Transaction {
  
       // Species
      String inSPEC 
-     if (mi.in.get("SPEC") != null) {
-        inSPEC = mi.in.get("SPEC") 
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
+        inSPEC = mi.inData.get("SPEC").trim() 
      } else {
         inSPEC = 0        
      }
      
      // Exception Code
      String inECOD  
-     if (mi.in.get("ECOD") != null) {
-        inECOD = mi.in.get("ECOD") 
+     if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
+        inECOD = mi.inData.get("ECOD").trim() 
      } else {
         inECOD = ""        
      }
 
      // Tag Number
      String inTGNO
-     if (mi.in.get("TGNO") != null) {
-        inTGNO = mi.in.get("TGNO") 
+     if (mi.in.get("TGNO") != null && mi.in.get("TGNO") != "") {
+        inTGNO = mi.inData.get("TGNO").trim() 
      } else {
         inTGNO = ""        
      }
@@ -168,8 +168,10 @@ public class AddLogHeader extends ExtendM3Transaction {
 
      DBContainer line = actionline.getContainer() 
      
-     line.set("EXCONO", inCONO)     
-     actionline.readAll(line, 1, releasedLineProcessor)   
+     line.set("EXCONO", inCONO)   
+     
+     int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()                 
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)   
    } 
 
     

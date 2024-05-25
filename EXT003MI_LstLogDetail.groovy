@@ -55,14 +55,13 @@ public class LstLogDetail extends ExtendM3Transaction {
     
   public void main() { 
      // Set Company Number
-     if (mi.in.get("CONO") != null) {
-        inCONO = mi.in.get("CONO") 
-     } else {
-        inCONO = 0      
-     }
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
+     } 
 
      // Set Division
-     if (mi.in.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null && mi.in.get("DIVI") != "") {
         inDIVI = mi.in.get("DIVI") 
      } else {
         inDIVI = ""     
@@ -131,9 +130,11 @@ public class LstLogDetail extends ExtendM3Transaction {
 
      DBAction actionline = database.table("EXTSLD").index("10").matching(expression).selectAllFields().build()
 	   DBContainer line = actionline.getContainer()   
+
+     line.set("EXCONO", inCONO)
      
      int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()         
-     actionline.readAll(line, 0, pageSize, releasedLineProcessor)               
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)               
 
    } 
 

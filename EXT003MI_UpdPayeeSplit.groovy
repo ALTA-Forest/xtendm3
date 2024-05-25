@@ -33,8 +33,8 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
   private final UtilityAPI utility
   private final LoggerAPI logger
   
-  Integer CONO
-  String DIVI
+  Integer inCONO
+  String inDIVI
   int inDLNO
   int inSTID
   String inITNO
@@ -59,15 +59,15 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
     
   public void main() {       
      // Set Company Number
-     CONO = mi.in.get("CONO")      
-     if (CONO == null || CONO == 0) {
-        CONO = program.LDAZD.CONO as Integer
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
      } 
 
      // Set Division
-     DIVI = mi.in.get("DIVI")
-     if (DIVI == null || DIVI == "") {
-        DIVI = program.LDAZD.DIVI
+     inDIVI = mi.in.get("DIVI")
+     if (inDIVI == null || inDIVI == "") {
+        inDIVI = program.LDAZD.DIVI
      }
 
      // Delivery Number
@@ -85,8 +85,8 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
      }
 
      // Item Number
-     if (mi.in.get("ITNO") != null) {
-        inITNO = mi.in.get("ITNO") 
+     if (mi.in.get("ITNO") != null && mi.in.get("ITNO") != "") {
+        inITNO = mi.inData.get("ITNO").trim() 
      } else {
         inITNO = ""         
      }
@@ -99,15 +99,23 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
      }
 
      // Payee Number
-     if (mi.in.get("CASN") != null) {
-        inCASN = mi.in.get("CASN") 
+     if (mi.in.get("CASN") != null && mi.in.get("CASN") != "") {
+        inCASN = mi.inData.get("CASN").trim() 
+        
+        // Validate payee if entered
+        Optional<DBContainer> CIDMAS = findCIDMAS(inCONO, inCASN)
+        if (!CIDMAS.isPresent()) {
+           mi.error("Payee doesn't exist")   
+           return             
+        }
+
      } else {
         inCASN = ""         
      }
 
      // Payee Name
-     if (mi.in.get("SUNM") != null) {
-        inSUNM = mi.in.get("SUNM") 
+     if (mi.in.get("SUNM") != null && mi.in.get("SUNM") != "") {
+        inSUNM = mi.inData.get("SUNM").trim() 
      } else {
         inSUNM = ""         
      }
@@ -118,8 +126,8 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
      } 
 
      // Cost Element
-     if (mi.in.get("SUCM") != null) {
-        inSUCM = mi.in.get("SUCM") 
+     if (mi.in.get("SUCM") != null && mi.in.get("SUCM") != "") {
+        inSUCM = mi.inData.get("SUCM").trim() 
      } else {
         inSUCM = ""         
      }
@@ -136,7 +144,7 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
      
 
      // Validate Payee Split record
-     Optional<DBContainer> EXTDPS = findEXTDPS(CONO, DIVI, inDLNO, inSTID, inITNO, inSEQN)
+     Optional<DBContainer> EXTDPS = findEXTDPS(inCONO, inDIVI, inDLNO, inSTID, inITNO, inSEQN)
      if(!EXTDPS.isPresent()){
         mi.error("Payee Split already exists")   
         return             
@@ -167,14 +175,31 @@ public class UpdPayeeSplit extends ExtendM3Transaction {
   }
 
 
+   //******************************************************************** 
+   // Check Supplier
+   //******************************************************************** 
+   private Optional<DBContainer> findCIDMAS(int CONO, String SUNO){  
+     DBAction query = database.table("CIDMAS").index("00").build()   
+     DBContainer CIDMAS = query.getContainer()
+     CIDMAS.set("IDCONO", CONO)
+     CIDMAS.set("IDSUNO", SUNO)
+    
+     if(query.read(CIDMAS))  { 
+       return Optional.of(CIDMAS)
+     } 
+  
+     return Optional.empty()
+   }
+
+
   //******************************************************************** 
   // Update EXTDPS record
   //********************************************************************    
   void updEXTDPSRecord(){      
      DBAction action = database.table("EXTDPS").index("00").build()
      DBContainer EXTDPS = action.getContainer()     
-     EXTDPS.set("EXCONO", CONO)     
-     EXTDPS.set("EXDIVI", DIVI)  
+     EXTDPS.set("EXCONO", inCONO)     
+     EXTDPS.set("EXDIVI", inDIVI)  
      EXTDPS.set("EXDLNO", inDLNO)
      EXTDPS.set("EXSTID", inSTID)
      EXTDPS.set("EXITNO", inITNO)

@@ -90,8 +90,8 @@ public class AddLogDetail extends ExtendM3Transaction {
 
      // Grade
      String inGRAD  
-     if (mi.in.get("GRAD") != null) {
-        inGRAD = mi.in.get("GRAD") 
+     if (mi.in.get("GRAD") != null && mi.in.get("GRAD") != "") {
+        inGRAD = mi.inData.get("GRAD").trim() 
      } else {
         inGRAD = ""        
      }
@@ -192,7 +192,8 @@ public class AddLogDetail extends ExtendM3Transaction {
      
      line.set("EXCONO", inCONO)     
      
-     actionline.readAll(line, 1, releasedLineProcessor)   
+     int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()                 
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)   
    
    } 
 
