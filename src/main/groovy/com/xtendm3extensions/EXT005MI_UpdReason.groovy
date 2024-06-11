@@ -86,8 +86,16 @@ public class UpdReason extends ExtendM3Transaction {
      }
      
      // Reason Code
-     if (mi.in.get("RECD") != null) {
-        inRECD = mi.in.get("RECD") 
+     if (mi.in.get("RECD") != null && mi.in.get("RECD") != "") {
+        inRECD = mi.inData.get("RECD").trim() 
+        
+        // Validate Reason Code
+        Optional<DBContainer> CSYTAB = findCSYTAB(inCONO, inRECD, "")
+        if (!CSYTAB.isPresent()) {
+           mi.error("Reason Code doesn't exist")   
+           return  
+        } 
+
      } else {
         inRECD = ""         
      }
@@ -159,6 +167,26 @@ public class UpdReason extends ExtendM3Transaction {
      EXTIRP.set("EXRPID", RPID)
      if(query.read(EXTIRP))  { 
        return Optional.of(EXTIRP)
+     } 
+  
+     return Optional.empty()
+  }
+
+
+  //******************************************************************** 
+  // Check RSCD in CSYTAB
+  //******************************************************************** 
+  private Optional<DBContainer> findCSYTAB(Integer CONO, String STKY, String LNCD){  
+     DBAction query = database.table("CSYTAB").index("00").build()     
+     DBContainer CSYTAB = query.getContainer()
+     CSYTAB.set("CTCONO", CONO)
+     CSYTAB.set("CTDIVI", "")
+     CSYTAB.set("CTSTCO", "RSCD")
+     CSYTAB.set("CTSTKY", STKY)
+     CSYTAB.set("CTLNCD", LNCD)
+    
+     if(query.read(CSYTAB))  { 
+       return Optional.of(CSYTAB)
      } 
   
      return Optional.empty()

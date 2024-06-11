@@ -73,7 +73,7 @@
   // Get EXTDPD record
   //******************************************************************** 
   private Optional<DBContainer> findEXTDPD(int CONO, String DIVI, int DPID){  
-     DBAction query = database.table("EXTDPD").index("00").selectAllFields().build()
+     DBAction query = database.table("EXTDPD").index("00").build()
      DBContainer EXTDPD = query.getContainer()
      EXTDPD.set("EXCONO", CONO)
      EXTDPD.set("EXDIVI", DIVI)
@@ -90,7 +90,7 @@
   // Delete record from EXTDPD
   //******************************************************************** 
   void deleteEXTDPDRecord(int CONO, String DIVI, int DPID){ 
-     DBAction action = database.table("EXTDPD").index("00").selectAllFields().build()
+     DBAction action = database.table("EXTDPD").index("00").build()
      DBContainer EXTDPD = action.getContainer()
      EXTDPD.set("EXCONO", CONO)
      EXTDPD.set("EXDIVI", DIVI)

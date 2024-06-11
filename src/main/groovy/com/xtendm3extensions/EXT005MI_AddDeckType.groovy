@@ -49,14 +49,14 @@ public class AddDeckType extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
 
      // Deck Type
      String inTYPE
-     if (mi.inData.get("TYPE") != null) {
+     if (mi.in.get("TYPE") != null && mi.in.get("TYPE") != "") {
         inTYPE = mi.inData.get("TYPE").trim() 
      } else {
         inTYPE = ""         
@@ -64,7 +64,7 @@ public class AddDeckType extends ExtendM3Transaction {
            
      // Name
      String inNAME 
-     if (mi.inData.get("NAME") != null) {
+     if (mi.in.get("NAME") != null && mi.in.get("NAME") != "") {
         inNAME = mi.inData.get("NAME").trim() 
      } else {
         inNAME= ""      

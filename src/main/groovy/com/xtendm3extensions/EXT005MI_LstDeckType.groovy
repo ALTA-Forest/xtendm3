@@ -48,28 +48,27 @@ public class LstDeckType extends ExtendM3Transaction {
     
   public void main() { 
      // Set Company Number
-     if (mi.in.get("CONO") != null) {
-        inCONO = mi.in.get("CONO") 
-     } else {
-        inCONO = 0      
-     }
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
+     } 
 
      // Set Division
-     if (mi.inData.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null) {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
      }
     
      // Deck Type
-     if (mi.inData.get("TYPE") != null) {
+     if (mi.in.get("TYPE") != null && mi.in.get("TYPE") != "") {
         inTYPE = mi.inData.get("TYPE").trim() 
      } else {
         inTYPE = ""     
      }
      
      // Name
-     if (mi.inData.get("NAME") != null) {
+     if (mi.in.get("NAME") != null && mi.in.get("NAME") != "") {
         inNAME = mi.inData.get("NAME").trim() 
      } else {
         inNAME = ""   
@@ -126,9 +125,11 @@ public class LstDeckType extends ExtendM3Transaction {
 
      DBAction actionline = database.table("EXTDPT").index("00").matching(expression).selectAllFields().build()
 	   DBContainer line = actionline.getContainer()   
+
+     line.set("EXCONO", inCONO)
      
      int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()                
-     actionline.readAll(line, 0, pageSize, releasedLineProcessor)               
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)               
   }
 
     Closure<?> releasedLineProcessor = { DBContainer line -> 

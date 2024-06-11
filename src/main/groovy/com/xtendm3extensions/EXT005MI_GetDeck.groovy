@@ -36,16 +36,18 @@ public class GetDeck extends ExtendM3Transaction {
   private final MIAPI mi 
   private final DatabaseAPI database 
   private final ProgramAPI program
+  private final LoggerAPI logger
   
   Integer inCONO
   String inDIVI
   int inDPID
   
   // Constructor 
-  public GetDeck(MIAPI mi, DatabaseAPI database, ProgramAPI program) {
+  public GetDeck(MIAPI mi, DatabaseAPI database, ProgramAPI program, LoggerAPI logger) {
      this.mi = mi
      this.database = database  
      this.program = program
+     this.logger = logger
   } 
     
   public void main() { 

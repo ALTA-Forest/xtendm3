@@ -109,6 +109,14 @@ public class UpdDeck extends ExtendM3Transaction {
      // Deck Date
      if (mi.in.get("DPDT") != null) {
         inDPDT = mi.in.get("DPDT") 
+        
+        //Validate date format
+        boolean validDPDT = utility.call("DateUtil", "isDateValid", String.valueOf(inDPDT), "yyyyMMdd")  
+        if (!validDPDT) {
+           mi.error("Deck Date is not valid")   
+           return  
+        } 
+
      } 
      
      // Life Cycle

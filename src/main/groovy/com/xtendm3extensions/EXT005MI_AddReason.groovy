@@ -67,14 +67,14 @@ public class AddReason extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
 
      // Reason Name
      String inRPNA
-     if (mi.inData.get("RPNA") != null) {
+     if (mi.in.get("RPNA") != null && mi.in.get("RPNA") != "") {
         inRPNA = mi.inData.get("RPNA").trim() 
      } else {
         inRPNA = ""         
@@ -82,8 +82,16 @@ public class AddReason extends ExtendM3Transaction {
      
      // Reason Code
      String inRECD
-     if (mi.inData.get("RECD") != null) {
+     if (mi.in.get("RECD") != null && mi.in.get("RECD") != "") {
         inRECD = mi.inData.get("RECD").trim() 
+        
+        // Validate Reason Code
+        Optional<DBContainer> CSYTAB = findCSYTAB(inCONO, inRECD, "")
+        if (!CSYTAB.isPresent()) {
+           mi.error("Reason Code doesn't exist")   
+           return  
+        } 
+
      } else {
         inRECD = ""         
      }
@@ -146,7 +154,7 @@ public class AddReason extends ExtendM3Transaction {
 
      // Note
      String inNOTE
-     if (mi.inData.get("NOTE") != null) {
+     if (mi.in.get("NOTE") != null && mi.in.get("NOTE") != "") {
         inNOTE = mi.inData.get("NOTE").trim() 
      } else {
         inNOTE = ""         
@@ -231,6 +239,26 @@ public class AddReason extends ExtendM3Transaction {
      return Optional.empty()
   }
   
+
+  //******************************************************************** 
+  // Check RSCD in CSYTAB
+  //******************************************************************** 
+  private Optional<DBContainer> findCSYTAB(Integer CONO, String STKY, String LNCD){  
+     DBAction query = database.table("CSYTAB").index("00").build()     
+     DBContainer CSYTAB = query.getContainer()
+     CSYTAB.set("CTCONO", CONO)
+     CSYTAB.set("CTDIVI", "")
+     CSYTAB.set("CTSTCO", "RSCD")
+     CSYTAB.set("CTSTKY", STKY)
+     CSYTAB.set("CTLNCD", LNCD)
+    
+     if(query.read(CSYTAB))  { 
+       return Optional.of(CSYTAB)
+     } 
+  
+     return Optional.empty()
+  }
+
   
   //******************************************************************** 
   // Add EXTIRP record 

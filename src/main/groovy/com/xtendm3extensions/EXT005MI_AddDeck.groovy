@@ -64,14 +64,14 @@ public class AddDeck extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
 
      // Deck Name
      String inDPNA
-     if (mi.inData.get("DPNA") != null) {
+     if (mi.in.get("DPNA") != null && mi.in.get("DPNA") != "") {
         inDPNA = mi.inData.get("DPNA").trim() 
      } else {
         inDPNA = ""         
@@ -79,7 +79,7 @@ public class AddDeck extends ExtendM3Transaction {
 
      // Deck Type
      String inTYPE  
-     if (mi.inData.get("TYPE") != null) {
+     if (mi.in.get("TYPE") != null && mi.in.get("TYPE") != "") {
         inTYPE = mi.inData.get("TYPE").trim() 
      } else {
         inTYPE = ""      
@@ -87,7 +87,7 @@ public class AddDeck extends ExtendM3Transaction {
            
      // Sort Code
      String inSORT  
-     if (mi.inData.get("SORT") != null) {
+     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
         inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT= ""      
@@ -102,7 +102,7 @@ public class AddDeck extends ExtendM3Transaction {
 
      // Yard
      String inYARD  
-     if (mi.inData.get("YARD") != null) {
+     if (mi.inData.get("YARD") != null && mi.inData.get("YARD") != "") {
         inYARD = mi.inData.get("YARD").trim() 
      } else {
         inYARD = ""      
@@ -120,6 +120,14 @@ public class AddDeck extends ExtendM3Transaction {
      int inDPDT  
      if (mi.in.get("DPDT") != null) {
         inDPDT = mi.in.get("DPDT") 
+        
+        //Validate date format
+        boolean validDPDT = utility.call("DateUtil", "isDateValid", String.valueOf(inDPDT), "yyyyMMdd")  
+        if (!validDPDT) {
+           mi.error("Deck Date is not valid")   
+           return  
+        } 
+
      } else {
         inDPDT = 0        
      }
@@ -143,7 +151,7 @@ public class AddDeck extends ExtendM3Transaction {
         mi.error("Deck Profile already exists")   
         return             
      } else {
-        // Write record 
+        // Write record       
         addEXTDPHRecord(inCONO, inDIVI, inDPID, inDPNA, inTYPE, inSORT, inYARD, inMBFW, inDPDT, inDPLC)   
         addDeckDetailsMI(String.valueOf(inCONO), inDIVI, String.valueOf(inDPID), "", "", "", "", "", "", "", "", "")   
      }  

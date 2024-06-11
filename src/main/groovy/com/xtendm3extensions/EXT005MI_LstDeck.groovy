@@ -59,14 +59,13 @@ public class LstDeck extends ExtendM3Transaction {
     
   public void main() { 
      // Set Company Number
-     if (mi.in.get("CONO") != null) {
-        inCONO = mi.in.get("CONO") as Integer
-     } else {
-        inCONO = 0      
-     }
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
+     } 
 
      // Set Division
-     if (mi.inData.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null) {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
@@ -80,21 +79,21 @@ public class LstDeck extends ExtendM3Transaction {
      }
 
      // Deck Type
-     if (mi.inData.get("TYPE") != null) {
+     if (mi.in.get("TYPE") != null && mi.in.get("TYPE") != "") {
         inTYPE = mi.inData.get("TYPE").trim() 
      } else {
         inTYPE = ""     
      }
 
      // Sort Code
-     if (mi.inData.get("SORT") != null) {
+     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
         inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT = ""   
      }
 
      // Yard
-     if (mi.inData.get("YARD") != null) {
+     if (mi.in.get("YARD") != null && mi.in.get("YARD") != "") {
         inYARD = mi.inData.get("YARD").trim() 
      } else {
         inYARD = ""   
@@ -170,10 +169,12 @@ public class LstDeck extends ExtendM3Transaction {
 
 
      DBAction actionline = database.table("EXTDPH").index("00").matching(expression).selectAllFields().build()
-	 DBContainer line = actionline.getContainer()   
+	   DBContainer line = actionline.getContainer()   
+
+     line.set("EXCONO", inCONO)
      
      int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()               
-     actionline.readAll(line, 0, pageSize, releasedLineProcessor)               
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)               
   }
 
 
