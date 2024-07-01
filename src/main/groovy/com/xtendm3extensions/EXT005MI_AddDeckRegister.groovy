@@ -43,6 +43,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
   
   Integer inCONO
   String inDIVI
+  int inDPID
   int outTRNO
   int inTRNO
   int inTRDT 
@@ -51,8 +52,17 @@ public class AddDeckRegister extends ExtendM3Transaction {
   double detailGVBF
   double detailNVBF
   double detailCOST
+  double totalLOAD
+  double totalDLOG
+  double totalGVBF
+  double totalNVBF
+  double totalDAAM
   String nextNumber
   double headMBFW
+  double previousTRNB
+  double newTRNB
+  double inputTNBF
+  int transactionNumber
 
   
   // Constructor 
@@ -73,13 +83,12 @@ public class AddDeckRegister extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
 
      // Deck ID
-     int inDPID
      if (mi.in.get("DPID") != null) {
         inDPID = mi.in.get("DPID") 
      } else {
@@ -88,18 +97,26 @@ public class AddDeckRegister extends ExtendM3Transaction {
 
      // Species
      String inSPEC 
-     if (mi.inData.get("SPEC") != null) {
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
         inSPEC = mi.inData.get("SPEC").trim() 
      } else {
         inSPEC = ""        
      }
-
-     // Purchase Order Number
-     String inPUNO 
-     if (mi.inData.get("PUNO") != null) {
-        inPUNO = mi.inData.get("PUNO").trim() 
+     
+     // Transaction Type
+     int inTRTP 
+     if (mi.in.get("TRTP") != null) {
+        inTRTP = mi.in.get("TRTP") 
      } else {
-        inPUNO = ""        
+        inTRTP = 0        
+     }
+
+     // Reference Number
+     String inTREF 
+     if (mi.in.get("TREF") != null && mi.in.get("TREF") != "") {
+        inTREF = mi.inData.get("TREF").trim() 
+     } else {
+        inTREF = ""        
      }
      
      // Invoice Batch Number
@@ -113,21 +130,21 @@ public class AddDeckRegister extends ExtendM3Transaction {
      // Transaction Date
      if (mi.in.get("TRDT") != null) {
         inTRDT = mi.in.get("TRDT") 
+        
+        //Validate date format
+        boolean validTRDT = utility.call("DateUtil", "isDateValid", String.valueOf(inTRDT), "yyyyMMdd")  
+        if (!validTRDT) {
+           mi.error("Transaction Date is not valid")   
+           return  
+        } 
+
      } else {
         inTRDT = 0        
      }
 
-     // Transaction Type
-     int inTRTP 
-     if (mi.in.get("TRTP") != null) {
-        inTRTP = mi.in.get("TRTP") 
-     } else {
-        inTRTP = 0        
-     }
-
      // Account Code
      String inACCD 
-     if (mi.inData.get("ACCD") != null) {
+     if (mi.in.get("ACCD") != null && mi.in.get("ACCD") != "") {
         inACCD = mi.inData.get("ACCD").trim() 
      } else {
         inACCD = ""        
@@ -143,7 +160,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
      
      // Transaction Receipt
      String inTRRE 
-     if (mi.in.get("TRRE") != null) {
+     if (mi.in.get("TRRE") != null && mi.in.get("TRRE") != "") {
         inTRRE = mi.inData.get("TRRE").trim() 
      } else {
         inTRRE = ""        
@@ -151,7 +168,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
      
      // Transaction Ticket
      String inTRTT 
-     if (mi.in.get("TRTT") != null) {
+     if (mi.in.get("TRTT") != null && mi.in.get("TRTT") != "") {
         inTRTT = mi.inData.get("TRTT").trim() 
      } else {
         inTRTT = ""        
@@ -179,6 +196,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
      double inTNBF 
      if (mi.in.get("TNBF") != null) {
         inTNBF = mi.in.get("TNBF") 
+        inputTNBF = inTNBF
      } 
 
      // Net Balance
@@ -219,7 +237,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
 
      // Reason ID
      String inRPID
-     if (mi.inData.get("RPID") != null) {
+     if (mi.in.get("RPID") != null) {
         inRPID = mi.inData.get("RPID").trim() 
      } else {
         inRPID = ""        
@@ -227,13 +245,14 @@ public class AddDeckRegister extends ExtendM3Transaction {
  
      // Note
      String inNOTE
-     if (mi.inData.get("NOTE") != null) {
+     if (mi.in.get("NOTE") != null && mi.in.get("NOTE") != "") {
         inNOTE = mi.inData.get("NOTE").trim() 
      } else {
         inNOTE = ""        
      }
     
-
+     logger.debug("Begin AddDeckRegister")  
+     
      headMBFW = 0d
      
      // Validate Deck Head record
@@ -268,26 +287,51 @@ public class AddDeckRegister extends ExtendM3Transaction {
         detailCOST = containerEXTDPD.get("EXCOST") 
      } 
 
-     //Get next number for contract number
-     getNextNumber("", "LP", "1") 
+     //Get next number for transaction number
+     getNextNumber("", "L4", "1") 
      outTRNO = nextNumber as Integer
      inTRNO = outTRNO as Integer
      
+     newTRNB = 0d
+     previousTRNB = 0d    
+
+     //Get last TRNB for the deck
+     List<DBContainer> ResultEXTDPR = listEXTDPR(inCONO, inDIVI, inDPID, inTRNO)
+     for (DBContainer RecLineEXTDPR : ResultEXTDPR){ 
+        transactionNumber = RecLineEXTDPR.get("EXTRNO") 
+        previousTRNB = RecLineEXTDPR.get("EXTRNB") 
+     }
+     newTRNB = inputTNBF + previousTRNB
+     
+     logger.debug("PreviousTRNB ${previousTRNB}")
+     logger.debug("InputTNBF ${inputTNBF}")
+     logger.debug("NewTRNB ${newTRNB}")
+     logger.debug("transactionNumber ${transactionNumber}")
+
+
      // Validate Deck Register record
      Optional<DBContainer> EXTDPR = findEXTDPR(inCONO, inDIVI, inDPID, inTRNO)
      if(EXTDPR.isPresent()){
         mi.error("Deck Profile Details already exists")   
         return             
-     } else {
+     } else {   
+        logger.debug("Add record to EXTDPR inLOAD ${inLOAD}")
+        logger.debug("Add record to EXTDPR inTLOG ${inTLOG}")
+        logger.debug("Add record to EXTDPR inTGBF ${inTGBF}")
+        logger.debug("Add record to EXTDPR inTNBF ${inTNBF}")
+        logger.debug("Add record to EXTDPR inDAAM ${inDAAM}")
+        logger.debug("Add record to EXTDPR inputTNBF ${inputTNBF}")
+        logger.debug("Add record to EXTDPR newTRNB ${newTRNB}")
+                
         // Write record 
-        addEXTDPRRecord(inCONO, inDIVI, inDPID, inTRNO, inSPEC, inPUNO, inINBN, inTRDT, inTRTP, inACCD, inACNM, inTRRE, inTRTT, inLOAD, inTLOG, inTGBF, inTNBF, inTRNB, inAUWE, inGRWE, inTRWE, inNEWE, inDAAM, inRPID, inNOTE)  
+        addEXTDPRRecord(inCONO, inDIVI, inDPID, inTRNO, inSPEC, inTREF, inINBN, inTRDT, inTRTP, inACCD, inACNM, inTRRE, inTRTT, inLOAD, inTLOG, inTGBF, inTNBF, newTRNB, inAUWE, inGRWE, inTRWE, inNEWE, inDAAM, inRPID, inNOTE)  
         
         //Sum of fields
-        double totalLOAD
-        double totalDLOG
-        double totalGVBF
-        double totalNVBF
-        double totalDAAM
+        totalLOAD = 0d
+        totalDLOG = 0d
+        totalGVBF = 0d
+        totalNVBF = 0d
+        totalDAAM = 0d
     
         if (inTRTP == 1 || inTRTP == 4 || inTRTP == 5) {
           //Purchase Order
@@ -320,21 +364,17 @@ public class AddDeckRegister extends ExtendM3Transaction {
           }
         }
         
-        String inCONOString = String.valueOf(inCONO)
-        String inDPIDString = String.valueOf(inDPID)
-        String inLOADString = String.valueOf(totalLOAD)
-        String inTLOGString = String.valueOf(totalDLOG)
-        String inTGBFString = String.valueOf(totalGVBF)
-        String inTNBFString = String.valueOf(totalNVBF)
-        String inTCOIString = String.valueOf(totalDAAM)
-        String inESWTString
-        String inAWBFString 
-        String inGBFLString
-        String inNBFLString
-             
-        updDeckDetailsMI(inCONOString, inDIVI, inDPIDString, inLOADString, inTLOGString, inTGBFString, inTNBFString, inESWTString, inTCOIString, inAWBFString, inGBFLString, inNBFLString)   
+        logger.debug("Add record to EXTDPR totalLOAD ${totalLOAD}")
+        logger.debug("Add record to EXTDPR totalTLOG ${totalDLOG}")
+        logger.debug("Add record to EXTDPR totalTGBF ${totalGVBF}")
+        logger.debug("Add record to EXTDPR totalTNBF ${totalNVBF}")
+        logger.debug("Add record to EXTDPR totalDAAM ${totalDAAM}")
      }  
 
+     mi.outData.put("CONO", String.valueOf(inCONO)) 
+     mi.outData.put("DIVI", inDIVI) 
+     mi.outData.put("TRNO", String.valueOf(outTRNO))      
+     mi.write()
   }
 
 
@@ -422,10 +462,45 @@ public class AddDeckRegister extends ExtendM3Transaction {
      return Optional.empty()
   }
   
+  
+
+  //******************************************************************** 
+  // Get last TRNB for the deck
+  //********************************************************************  
+  private List<DBContainer> listEXTDPR(int CONO, String DIVI, int DPID, int TRNO){  
+    List<DBContainer>recLineEXTDPR = new ArrayList() 
+    ExpressionFactory expression = database.getExpressionFactory("EXTDPR")
+    expression = expression.eq("EXCONO", String.valueOf(CONO)).and(expression.eq("EXDIVI", DIVI)).and(expression.eq("EXDPID", String.valueOf(DPID)))
+    
+    DBAction query = database.table("EXTDPR").index("00").matching(expression).selection("EXTRNO", "EXTRNB").reverse().build()
+    DBContainer EXTDPR = query.createContainer()
+    EXTDPR.set("EXCONO", CONO)
+    EXTDPR.set("EXDIVI", DIVI)
+    EXTDPR.set("EXDPID", DPID)
+    EXTDPR.set("EXTRNO", TRNO)
+    
+    logger.debug("In qry DPID ${DPID}")
+    logger.debug("In qry TRNO ${TRNO}")
+
+    int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords() 
+    
+    boolean found = false
+    query.readAll(EXTDPR, 3, pageSize, { DBContainer recordEXTDPR ->  
+       if (!found) {
+          recLineEXTDPR.add(recordEXTDPR.createCopy())
+          found = true
+       }
+    })
+
+    return recLineEXTDPR
+  }
+  
+
+
   //******************************************************************** 
   // Add EXTDPR record 
   //********************************************************************     
-  void addEXTDPRRecord(int CONO, String DIVI, int DPID, int TRNO, String SPEC, String PUNO, int INBN, int TRDT, int TRTP, String ACCD, String ACNM, String TRRE, String TRTT, double LOAD, double TLOG, double TGBF, double TNBF, double TRNB, double AUWE, double GRWE, double TRWE, double NEWE, double DAAM, String RPID, String NOTE){     
+  void addEXTDPRRecord(int CONO, String DIVI, int DPID, int TRNO, String SPEC, String TREF, int INBN, int TRDT, int TRTP, String ACCD, String ACNM, String TRRE, String TRTT, double LOAD, double TLOG, double TGBF, double TNBF, double TRNB, double AUWE, double GRWE, double TRWE, double NEWE, double DAAM, String RPID, String NOTE){     
        DBAction action = database.table("EXTDPR").index("00").build()
        DBContainer EXTDPR = action.createContainer()
        EXTDPR.set("EXCONO", CONO)
@@ -433,7 +508,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
        EXTDPR.set("EXDPID", DPID)
        EXTDPR.set("EXTRNO", TRNO)
        EXTDPR.set("EXSPEC", SPEC)
-       EXTDPR.set("EXPUNO", PUNO)
+       EXTDPR.set("EXTREF", TREF)
        EXTDPR.set("EXINBN", INBN)
        EXTDPR.set("EXTRDT", TRDT)
        EXTDPR.set("EXTRTP", TRTP)
@@ -445,7 +520,7 @@ public class AddDeckRegister extends ExtendM3Transaction {
        EXTDPR.set("EXTLOG", TLOG)
        EXTDPR.set("EXTGBF", TGBF)
        EXTDPR.set("EXTNBF", TNBF)
-       EXTDPR.set("EXTRNB", TRNB)
+       //EXTDPR.set("EXTRNB", TRNB)
        EXTDPR.set("EXAUWE", AUWE)
        EXTDPR.set("EXGRWE", GRWE)
        EXTDPR.set("EXTRWE", TRWE)
@@ -461,7 +536,39 @@ public class AddDeckRegister extends ExtendM3Transaction {
        EXTDPR.set("EXLMDT", regdate) 
        EXTDPR.set("EXRGTM", regtime)
        action.insert(EXTDPR)         
- } 
+  } 
+
+
+  //******************************************************************** 
+  // Update EXTDPD record
+  //********************************************************************    
+  void updEXTDPDRecord() {      
+     DBAction action = database.table("EXTDPD").index("00").build()
+     DBContainer EXTDPD = action.getContainer()     
+     EXTDPD.set("EXCONO", inCONO)
+     EXTDPD.set("EXDIVI", inDIVI)
+     EXTDPD.set("EXDPID", inDPID)
+
+     // Read with lock
+     action.readLock(EXTDPD, updateCallBackEXTDPD)
+     }
+   
+     Closure<?> updateCallBackEXTDPD = { LockedResult lockedResult -> 
+        lockedResult.set("EXLOAD", totalLOAD)
+        lockedResult.set("EXDLOG", totalDLOG)
+        lockedResult.set("EXGVBF", totalGVBF)
+        lockedResult.set("EXNVBF", newTRNB)
+        lockedResult.set("EXCOST", totalDAAM)       
+    
+       // Update changed information
+       int changeNo = lockedResult.get("EXCHNO")
+       int newChangeNo = changeNo + 1 
+       int changeddate = utility.call("DateUtil", "currentDateY8AsInt")
+       lockedResult.set("EXLMDT", changeddate)        
+       lockedResult.set("EXCHNO", newChangeNo) 
+       lockedResult.set("EXCHID", program.getUser())
+       lockedResult.update()
+    }
 
      
 } 

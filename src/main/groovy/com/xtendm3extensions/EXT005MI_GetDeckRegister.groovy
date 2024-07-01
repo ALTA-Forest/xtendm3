@@ -71,7 +71,7 @@ public class GetDeckRegister extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
@@ -113,7 +113,7 @@ public class GetDeckRegister extends ExtendM3Transaction {
       mi.outData.put("DPID", EXTDPR.get("EXDPID").toString()) 
       mi.outData.put("TRNO", EXTDPR.get("EXTRNO").toString()) 
       mi.outData.put("SPEC", EXTDPR.getString("EXSPEC")) 
-      mi.outData.put("PUNO", EXTDPR.getString("EXPUNO"))
+      mi.outData.put("TREF", EXTDPR.getString("EXTREF"))
       mi.outData.put("INBN", EXTDPR.get("EXINBN").toString()) 
       mi.outData.put("TRDT", EXTDPR.get("EXTRDT").toString()) 
       mi.outData.put("TRTP", EXTDPR.get("EXTRTP").toString()) 
@@ -122,6 +122,7 @@ public class GetDeckRegister extends ExtendM3Transaction {
       mi.outData.put("TRRE", EXTDPR.getString("EXTRRE")) 
       mi.outData.put("TRTT", EXTDPR.getString("EXTRTT")) 
       mi.outData.put("LOAD", EXTDPR.get("EXLOAD").toString()) 
+      mi.outData.put("TLOG", EXTDPR.get("EXTLOG").toString()) 
       mi.outData.put("TGBF", EXTDPR.getDouble("EXTGBF").toString()) 
       mi.outData.put("TNBF", EXTDPR.getDouble("EXTNBF").toString()) 
       mi.outData.put("TRNB", EXTDPR.getDouble("EXTRNB").toString()) 

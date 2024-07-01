@@ -14,7 +14,7 @@
  * @param: DIVI - Division
  * @param: DPID - Deck ID
  * @param: TRTP - Transaction Type
- * @param: PUNO - Purchase Order Number
+ * @param: TREF - Reference Number
  * 
 */
 
@@ -25,7 +25,7 @@
  * @return: DPID - Deck ID
  * @return: TRNO - Transaction Number
  * @return: SPEC - Species
- * @return: PUNO - Purchase Order Number
+ * @return: TREF - Reference Number
  * @return: INBN - Invoice Batch Number
  * @return: TRDT - Transaction Date
  * @return: TRTP - Transaction Type
@@ -55,8 +55,9 @@ public class LstDeckRegister extends ExtendM3Transaction {
   String inDIVI
   int inDPID
   int inTRTP
-  String inPUNO
+  String inTREF
   int numberOfFields
+  int inTRNO
 
   
   // Constructor 
@@ -68,14 +69,13 @@ public class LstDeckRegister extends ExtendM3Transaction {
     
   public void main() { 
      // Set Company Number
-     if (mi.in.get("CONO") != null) {
-        inCONO = mi.in.get("CONO") as Integer
-     } else {
-        inCONO = 0      
-     }
+     inCONO = mi.in.get("CONO")      
+     if (inCONO == null || inCONO == 0) {
+        inCONO = program.LDAZD.CONO as Integer
+     } 
 
      // Set Division
-     if (mi.inData.get("DIVI") != null) {
+     if (mi.in.get("DIVI") != null && mi.in.get("DIVI") != "") {
         inDIVI = mi.inData.get("DIVI").trim() 
      } else {
         inDIVI = ""     
@@ -95,13 +95,19 @@ public class LstDeckRegister extends ExtendM3Transaction {
         inTRTP = 0   
      }
 
-     // Purchase Order Number
-     if (mi.inData.get("PUNO") != null) {
-        inPUNO = mi.inData.get("PUNO").trim() 
+     // Reference Number
+     if (mi.in.get("TREF") != null && mi.in.get("TREF") != "") {
+        inTREF = mi.inData.get("TREF").trim() 
      } else {
-        inPUNO = ""     
+        inTREF = ""     
      }
 
+     // Transaction number
+     if (mi.in.get("TRNO") != null) {
+        inTRNO = mi.in.get("TRNO") 
+     } else {
+        inTRNO = 0    
+     }
 
      // List deck register
      listDeckRegister()
@@ -150,22 +156,33 @@ public class LstDeckRegister extends ExtendM3Transaction {
        }
      }
 
-     if (inPUNO != "") {
+     if (inTREF != "") {
        if (numberOfFields > 0) {
-         expression = expression.and(expression.eq("EXPUNO", inPUNO))
+         expression = expression.and(expression.eq("EXTREF", inTREF))
          numberOfFields = 1
        } else {
-         expression = expression.eq("EXPUNO", inPUNO)
+         expression = expression.eq("EXTREF", inTREF)
          numberOfFields = 1
        }
      }
 
+     if (inTRNO != 0) {
+       if (numberOfFields > 0) {
+         expression = expression.and(expression.lt("EXTRNO", String.valueOf(inTRNO)))
+         numberOfFields = 1
+       } else {
+         expression = expression.eq("EXTRNO", String.valueOf(inTRNO))
+         numberOfFields = 1
+       }
+     }
 
      DBAction actionline = database.table("EXTDPR").index("00").matching(expression).selectAllFields().build()
-	 DBContainer line = actionline.getContainer()   
+	   DBContainer line = actionline.getContainer()   
+
+     line.set("EXCONO", inCONO)
      
      int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()              
-     actionline.readAll(line, 0, pageSize, releasedLineProcessor)               
+     actionline.readAll(line, 1, pageSize, releasedLineProcessor)               
   }
 
 
@@ -175,7 +192,7 @@ public class LstDeckRegister extends ExtendM3Transaction {
       mi.outData.put("DPID", line.get("EXDPID").toString()) 
       mi.outData.put("TRNO", line.get("EXTRNO").toString()) 
       mi.outData.put("SPEC", line.getString("EXSPEC")) 
-      mi.outData.put("PUNO", line.getString("EXPUNO"))
+      mi.outData.put("TREF", line.getString("EXTREF"))
       mi.outData.put("INBN", line.get("EXINBN").toString()) 
       mi.outData.put("TRDT", line.get("EXTRDT").toString()) 
       mi.outData.put("TRTP", line.get("EXTRTP").toString()) 

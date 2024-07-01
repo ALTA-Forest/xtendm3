@@ -42,7 +42,7 @@ public class UpdDeckRegister extends ExtendM3Transaction {
   int inTRNO 
   String inSPEC
   int inINBN 
-  String inPUNO
+  String inTREF
   int inTRDT 
   int inTRTP 
   String inACCD  
@@ -69,6 +69,15 @@ public class UpdDeckRegister extends ExtendM3Transaction {
   double registerTLOG
   double registerTGBF
   double registerTNBF
+  double totalLOAD
+  double totalDLOG
+  double totalGVBF
+  double totalNVBF
+  double inDLOD
+  double inDLOG
+  double inDGBF
+  double inCOST
+  int transactionNumber
      
   
   // Constructor 
@@ -89,7 +98,7 @@ public class UpdDeckRegister extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
@@ -109,13 +118,22 @@ public class UpdDeckRegister extends ExtendM3Transaction {
      }           
 
      // Species
-     if (mi.in.get("SPEC") != null) {
+     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
         inSPEC = mi.inData.get("SPEC").trim() 
-     } 
+     } else {
+        inSPEC = ""
+     }
+     
+     // Transaction Type
+     if (mi.in.get("TRTP") != null) {
+        inTRTP = mi.in.get("TRTP")
+     }      
 
-     // Purchase Order Number
-     if (mi.inData.get("PUNO") != null) {
-        inPUNO = mi.inData.get("PUNO").trim() 
+     // Reference Number
+     if (mi.in.get("TREF") != null && mi.in.get("TREF") != "") {
+        inTREF = mi.inData.get("TREF").trim() 
+     } else {
+        inTREF = ""
      }
      
      // Invoice Batch Number
@@ -126,31 +144,42 @@ public class UpdDeckRegister extends ExtendM3Transaction {
      // Transaction Date
      if (mi.in.get("TRDT") != null) {
         inTRDT = mi.in.get("TRDT") 
+        
+        //Validate date format
+        boolean validTRDT = utility.call("DateUtil", "isDateValid", String.valueOf(inTRDT), "yyyyMMdd")  
+        if (!validTRDT) {
+           mi.error("Transaction Date is not valid")   
+           return  
+        } 
+
      }
 
-     // Transaction Type
-     if (mi.in.get("TRTP") != null) {
-        inTRTP = mi.in.get("TRTP")
-     } 
-
      // Account Code
-     if (mi.in.get("ACCD") != null) {
+     if (mi.in.get("ACCD") != null && mi.in.get("ACCD") != "") {
         inACCD = mi.inData.get("ACCD").trim() 
+     } else {
+        inACCD = ""
      }
     
      // Account Name
-     if (mi.inData.get("ACNM") != null) {
+     if (mi.in.get("ACNM") != null && mi.in.get("ACNM") != "") {
         inACNM = mi.inData.get("ACNM").trim() 
+     } else {
+        inACNM = ""
      }
  
      // Transaction Receipt
-     if (mi.in.get("TRRE") != null) {
+     if (mi.in.get("TRRE") != null && mi.in.get("TRRE") != "") {
         inTRRE = mi.inData.get("TRRE").trim() 
-     } 
+     } else {
+        inTRRE = ""
+     }
      
      // Transaction Ticket
-     if (mi.in.get("TRTT") != null) {
+     if (mi.in.get("TRTT") != null && mi.in.get("TRTT") != "") {
         inTRTT = mi.inData.get("TRTT").trim() 
+     } else {
+        inTRTT = ""
      }
      
      // Load
@@ -204,29 +233,45 @@ public class UpdDeckRegister extends ExtendM3Transaction {
      }
 
      // Reason ID
-     if (mi.inData.get("RPID") != null) {
+     if (mi.in.get("RPID") != null && mi.in.get("RPID") != "") {
         inRPID = mi.inData.get("RPID").trim() 
+     } else {
+        inRPID = ""
+     }
+     
+      // Total Load
+     if (mi.in.get("DLOD") != null) {
+        inDLOD = mi.in.get("DLOD") 
+     } 
+
+     // Total Logs
+     if (mi.in.get("DLOG") != null) {
+        inDLOG = mi.in.get("DLOG") 
+     }
+
+     // Total Gross BF
+     if (mi.in.get("DGBF") != null) {
+        inDGBF = mi.in.get("DGBF") 
+     }
+     
+     // Total Amount
+     if (mi.in.get("COST") != null) {
+        inCOST = mi.in.get("COST") 
      }
 
      // Note
-     if (mi.inData.get("NOTE") != null) {
+     if (mi.in.get("NOTE") != null && mi.in.get("NOTE") != "") {
         inNOTE = mi.inData.get("NOTE").trim() 
-     } 
-
-
-     // Validate Deck Profile Detail record
-     Optional<DBContainer> EXTDPD = findEXTDPD(inCONO, inDIVI, inDPID)
-     if(!EXTDPD.isPresent()){
-        mi.error("Deck Profile Details doesn't exist")   
-        return             
      } else {
-        // Record found, get info from detail record  
-        DBContainer containerEXTDPD = EXTDPD.get() 
-        detailLOAD = containerEXTDPD.get("EXLOAD") 
-        detailDLOG = containerEXTDPD.get("EXDLOG") 
-        detailGVBF = containerEXTDPD.get("EXGVBF") 
-        detailNVBF = containerEXTDPD.get("EXNVBF") 
-     } 
+        inNOTE = ""
+     }
+
+     
+    //Get last TRNB for the deck
+     List<DBContainer> ResultEXTDPR = listEXTDPR(inCONO, inDIVI, inDPID, inTRNO)
+     for (DBContainer RecLineEXTDPR : ResultEXTDPR){ 
+        transactionNumber = RecLineEXTDPR.get("EXTRNO") 
+     }
 
      // Validate Deck Register record
      Optional<DBContainer> EXTDPR = findEXTDPR(inCONO, inDIVI, inDPID, inTRNO)
@@ -234,38 +279,9 @@ public class UpdDeckRegister extends ExtendM3Transaction {
         mi.error("Deck Register doesn't exist")   
         return             
      } else {       
-        // Record found, get info from register record
-        DBContainer containerEXTDPR = EXTDPR.get() 
-        registerLOAD = containerEXTDPR.get("EXLOAD") 
-        registerTLOG = containerEXTDPR.get("EXTLOG") 
-        registerTGBF = containerEXTDPR.get("EXTGBF") 
-        registerTNBF = containerEXTDPR.get("EXTNBF") 
-
-        //Sum of fields
-        double totalLOAD
-        double totalDLOG
-        double totalGVBF
-        double totalNVBF
-    
-        totalLOAD = detailLOAD - registerLOAD
-        totalDLOG = detailDLOG - registerTLOG
-        totalGVBF = detailGVBF - registerTGBF
-        totalNVBF = detailNVBF - registerTNBF
-        
-        totalLOAD = totalLOAD + inLOAD
-        totalDLOG = totalLOAD + inTLOG
-        totalGVBF = totalLOAD + inTGBF
-        totalNVBF = totalLOAD + inTNBF
-
-
-        String inCONOString = String.valueOf(inCONO)
-        String inDPIDString = String.valueOf(inDPID)
-        String inLOADString = String.valueOf(totalLOAD)
-        String inTLOGString = String.valueOf(totalDLOG)
-        String inTGBFString = String.valueOf(totalGVBF)
-        String inTNBFString = String.valueOf(totalNVBF)
-           
-        updDeckDetailsMI(inCONOString, inDIVI, inDPIDString, inLOADString, inTLOGString, inTGBFString, inTNBFString)   
+        if (inTRNO >= transactionNumber) {
+          updEXTDPDRecord()
+        }
 
         // Update record
         updEXTDPRRecord()
@@ -303,6 +319,7 @@ public class UpdDeckRegister extends ExtendM3Transaction {
       miCaller.call("EXT005MI","UpdDeckDet", params, callback)
    } 
   
+  
       
   //******************************************************************** 
   // Get EXTDPR record
@@ -338,87 +355,87 @@ public class UpdDeckRegister extends ExtendM3Transaction {
      }
    
      Closure<?> updateCallBackEXTDPR = { LockedResult lockedResult -> 
-       if (inTRDT != null && inTRDT != "") {
+       if (mi.in.get("TRDT") != null) {
           lockedResult.set("EXTRDT", inTRDT)
        }
   
-       if (inSPEC != null && inSPEC != "") {
+       if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
           lockedResult.set("EXSPEC", inSPEC)
        }
        
-       if (inPUNO != null && inPUNO != "") {
-          lockedResult.set("EXPUNO", inPUNO)
+       if (mi.in.get("TREF") != null && mi.in.get("TREF") != "") {
+          lockedResult.set("EXTREF", inTREF)
        }
   
-       if (inINBN != null && inINBN != "") {
+       if (mi.in.get("INBN") != null) {
           lockedResult.set("EXINBN", inINBN)
        }
   
-       if (inTRTP != null && inTRTP != "") {
+       if (mi.in.get("TRTP") != null) {
           lockedResult.set("EXTRTP", inTRTP)
        }
    
-       if (inACCD != null && inACCD != "") {
+       if (mi.in.get("ACCD") != null && mi.in.get("ACCD") != "") {
           lockedResult.set("EXACCD", inACCD)
        }
   
-       if (inACNM != null && inACNM != "") {
+       if (mi.in.get("ACNM") != null && mi.in.get("ACNM") != "") {
           lockedResult.set("EXACNM", inACNM)
        }
        
-       if (inTRRE != null && inTRRE != "") {
+       if (mi.in.get("TRRE") != null && mi.in.get("TRRE") != "") {
           lockedResult.set("EXTRRE", inTRRE)
        }
        
-       if (inTRTT != null && inTRTT != "") {
+       if (mi.in.get("TRTT") != null && mi.in.get("TRTT") != "") {
           lockedResult.set("EXTRTT", inTRTT)
        }
        
-       if (inLOAD != null && inLOAD != "") {
+       if (mi.in.get("LOAD") != null) {
           lockedResult.set("EXLOAD", inLOAD)
        }
   
-       if (inTLOG != null && inTLOG != "") {
+       if (mi.in.get("TLOG") != null) {
           lockedResult.set("EXTLOG", inTLOG)
        }
        
-       if (inTGBF != null && inTGBF != "") {
+       if (mi.in.get("TGBF") != null) {
           lockedResult.set("EXTGBF", inTGBF)
        }
        
-       if (inTNBF != null && inTNBF != "") {
+       if (mi.in.get("TNBF") != null) {
           lockedResult.set("EXTNBF", inTNBF)
        }
        
-       if (inTRNB != null && inTRNB != "") {
+       if (mi.in.get("TRNB") != null) {
           lockedResult.set("EXTRNB", inTRNB)
        }
   
-       if (inAUWE != null && inAUWE != "") {
+       if (mi.in.get("AUWE") != null) {
           lockedResult.set("EXAUWE", inAUWE)
        }
   
-       if (inGRWE != null && inGRWE != "") {
+       if (mi.in.get("GRWE") != null) {
           lockedResult.set("EXGRWE", inGRWE)
        }
   
-       if (inTRWE != null && inTRWE != "") {
+       if (mi.in.get("TRWE") != null) {
           lockedResult.set("EXTRWE", inTRWE)
        }
   
-       if (inNEWE != null && inNEWE != "") {
+       if (mi.in.get("NEWE") != null) {
           lockedResult.set("EXNEWE", inNEWE)
        }
   
-       if (inDAAM != null && inDAAM != "") {
+       if (mi.in.get("DAAM") != null) {
           lockedResult.set("EXDAAM", inDAAM)
        }
   
-       if (inRPID != null && inRPID != "") {
+       if (mi.in.get("RPID") != null && mi.in.get("RPID") != "") {
           lockedResult.set("EXRPID", inRPID)
        }
       
-       if (inNOTE != null && inNOTE != "") {
+       if (mi.in.get("NOTE") != null && mi.in.get("NOTE") != "") {
           lockedResult.set("EXNOTE", inNOTE)
        }
   
@@ -430,6 +447,82 @@ public class UpdDeckRegister extends ExtendM3Transaction {
        lockedResult.set("EXCHID", program.getUser())
        lockedResult.update()
     }
+
+
+    //******************************************************************** 
+    // Update EXTDPD record
+    //********************************************************************    
+    void updEXTDPDRecord() {      
+       DBAction action = database.table("EXTDPD").index("00").build()
+       DBContainer EXTDPD = action.getContainer()     
+       EXTDPD.set("EXCONO", inCONO)
+       EXTDPD.set("EXDIVI", inDIVI)
+       EXTDPD.set("EXDPID", inDPID)
+
+       // Read with lock
+       action.readLock(EXTDPD, updateCallBackEXTDPD)
+     }
+   
+     Closure<?> updateCallBackEXTDPD = { LockedResult lockedResult -> 
+         if (mi.in.get("TRNB") != null) {
+            lockedResult.set("EXNVBF", inTRNB)
+         }
+         // Total Load
+         if (mi.in.get("DLOD") != null) {
+            lockedResult.set("EXLOAD", inDLOD)
+         } 
+         // Total Logs
+         if (mi.in.get("DLOG") != null) {
+            lockedResult.set("EXDLOG", inDLOG)
+         }
+         // Total Gross BF
+         if (mi.in.get("DGBF") != null) {
+            lockedResult.set("EXGVBF", inDGBF)
+         }
+         // Total Amount
+         if (mi.in.get("COST") != null) {
+            lockedResult.set("EXCOST", inCOST)
+         }
+    
+
+        // Update changed information
+        int changeNo = lockedResult.get("EXCHNO")
+        int newChangeNo = changeNo + 1 
+        int changeddate = utility.call("DateUtil", "currentDateY8AsInt")
+        lockedResult.set("EXLMDT", changeddate)        
+        lockedResult.set("EXCHNO", newChangeNo) 
+        lockedResult.set("EXCHID", program.getUser())
+        lockedResult.update()
+     }
+     
+     //******************************************************************** 
+     // Get last TRNB for the deck
+     //********************************************************************  
+     private List<DBContainer> listEXTDPR(int CONO, String DIVI, int DPID, int TRNO){  
+       List<DBContainer>recLineEXTDPR = new ArrayList() 
+       ExpressionFactory expression = database.getExpressionFactory("EXTDPR")
+       expression = expression.eq("EXCONO", String.valueOf(CONO)).and(expression.eq("EXDIVI", DIVI)).and(expression.eq("EXDPID", String.valueOf(DPID)))
+      
+       DBAction query = database.table("EXTDPR").index("00").matching(expression).selection("EXTRNO", "EXTRNB").reverse().build()
+       DBContainer EXTDPR = query.createContainer()
+       EXTDPR.set("EXCONO", CONO)
+       EXTDPR.set("EXDIVI", DIVI)
+       EXTDPR.set("EXDPID", DPID)
+       EXTDPR.set("EXTRNO", TRNO)
+  
+       int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords() 
+      
+       boolean found = false
+       query.readAll(EXTDPR, 3, pageSize, { DBContainer recordEXTDPR ->  
+       if (!found) {
+          recLineEXTDPR.add(recordEXTDPR.createCopy())
+          found = true
+       }
+      })
+  
+      return recLineEXTDPR
+    }
+
 
 } 
 

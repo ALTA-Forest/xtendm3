@@ -49,14 +49,14 @@ public class AddAccount extends ExtendM3Transaction {
      } 
 
      // Set Division
-     inDIVI = mi.inData.get("DIVI").trim()
+     inDIVI = mi.in.get("DIVI")
      if (inDIVI == null || inDIVI == "") {
         inDIVI = program.LDAZD.DIVI
      }
 
      // Account Code
      String inACCD
-     if (mi.inData.get("ACCD") != null) {
+     if (mi.in.get("ACCD") != null && mi.in.get("ACCD") != "") {
         inACCD = mi.inData.get("ACCD").trim() 
      } else {
         inACCD = ""         
@@ -64,7 +64,7 @@ public class AddAccount extends ExtendM3Transaction {
            
      // Name
      String inNAME 
-     if (mi.inData.get("NAME") != null) {
+     if (mi.in.get("NAME") != null && mi.in.get("NAME") != "") {
         inNAME = mi.inData.get("NAME").trim() 
      } else {
         inNAME= ""      
