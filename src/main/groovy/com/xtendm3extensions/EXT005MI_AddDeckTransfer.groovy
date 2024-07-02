@@ -467,7 +467,9 @@ public class AddDeckTransfer extends ExtendM3Transaction {
     container.set("EXCONO", inCONO)
     container.set("EXDIVI", inDIVI)
     container.set("EXDPID", fromDeck)
-    query.readAll(container, 3, releasedItemProcessor)
+    
+    int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords() 
+    query.readAll(container, 3, pageSize, releasedItemProcessor)
   }
 
   Closure<?> releasedItemProcessor = { DBContainer container ->
