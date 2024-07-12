@@ -1,4 +1,4 @@
-// @author    Jessica Bjorklund (jessica.bjorklund@columbusglobal.com)
+ // @author    Jessica Bjorklund (jessica.bjorklund@columbusglobal.com)
 // @date      2023-05-10
 // @version   1.0 
 //
@@ -8,6 +8,11 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-05-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-07-01   Jessica Bjorklund (Columbus)       Change of update of GRAD to allow blank value
+
+ 
 /**
  * IN
  * @param: CONO - Company Number
