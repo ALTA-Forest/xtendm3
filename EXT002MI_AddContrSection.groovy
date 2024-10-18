@@ -10,7 +10,7 @@
 
 // Date         Changed By                         Description
 // 2023-04-10   Jessica Bjorklund (Columbus)       Creation
-// 2024-08-09   Jessica Bjorklund (Columbus)       Change lenght of CSNA from 30 to 50
+// 2024-08-09   Jessica Bjorklund (Columbus)       Change length of CSNA from 30 to 50
 
 
 /**
