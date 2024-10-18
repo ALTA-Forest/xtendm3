@@ -8,6 +8,12 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-05-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-07-01   Jessica Bjorklund (Columbus)       Change of update of SPEC, ECOD and TGNO to allow blank value
+// 2024-07-19   Jessica Bjorklund (Columbus)       Add DSID and SRID as input fields
+
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -20,6 +26,8 @@
  * @param: ECOD - Exception Code
  * @param: TGNO - Tag Number
  * @param: LAMT - Amount
+ * @param: DSID - Section ID
+ * @param: SRID - Rate ID
 */
 
 
@@ -41,6 +49,8 @@ public class UpdLogHeader extends ExtendM3Transaction {
   String inECOD  
   String inTGNO
   double inLAMT
+  int inDSID 
+  int inSRID
 
   
   // Constructor 
@@ -86,29 +96,33 @@ public class UpdLogHeader extends ExtendM3Transaction {
      } 
  
       // Species
-     if (mi.in.get("SPEC") != null && mi.in.get("SPEC") != "") {
+     if (mi.in.get("SPEC") != null ) {
         inSPEC = mi.inData.get("SPEC").trim() 
-     } else {
-        inSPEC = ""
      }
      
      // Exception Code
-     if (mi.in.get("ECOD") != null && mi.in.get("ECOD") != "") {
+     if (mi.in.get("ECOD") != null) {
         inECOD = mi.in.get("ECOD") 
-     } else {
-        inECOD = ""        
-     }
+     } 
 
      // Tag Number
-     if (mi.in.get("TGNO") != null && mi.in.get("TGNO") != "") {
+     if (mi.in.get("TGNO") != null) {
         inTGNO = mi.in.get("TGNO") 
-     } else {
-        inTGNO = ""        
      }
 
      // Amount
      if (mi.in.get("LAMT") != null) {
         inLAMT = mi.in.get("LAMT") 
+     } 
+
+     // Section ID
+     if (mi.in.get("DSID") != null) {
+        inDSID = mi.in.get("DSID") 
+     }
+
+     // Rate ID
+     if (mi.in.get("SRID") != null) {
+        inSRID = mi.in.get("SRID") 
      } 
 
 
@@ -162,20 +176,28 @@ public class UpdLogHeader extends ExtendM3Transaction {
           lockedResult.set("EXTDCK", mi.in.get("TDCK"))
        }
   
-       if (inSPEC != "") {
+       if (inSPEC != null) {
           lockedResult.set("EXSPEC", inSPEC)
        }
    
-       if (inECOD != "") {
+       if (inECOD != null) {
           lockedResult.set("EXECOD", inECOD)
        }
        
-       if (inTGNO != "") {
+       if (inTGNO != null) {
           lockedResult.set("EXTGNO", inTGNO)
        }
   
        if (mi.in.get("LAMT") != null) {
           lockedResult.set("EXLAMT", mi.in.get("LAMT"))
+       }
+       
+       if (mi.in.get("DSID") != null) {
+          lockedResult.set("EXDSID", mi.in.get("DSID"))
+       }
+
+       if (mi.in.get("SRID") != null) {
+          lockedResult.set("EXSRID", mi.in.get("SRID"))
        }
   
        int changeNo = lockedResult.get("EXCHNO")

@@ -8,6 +8,11 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-05-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-07-19   Jessica Bjorklund (Columbus)       Add DSID and SRID as input fields
+
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -20,6 +25,8 @@
  * @param: ECOD - Exception Code
  * @param: TGNO - Tag Number
  * @param: LAMT - Amount
+ * @param: DSID - Section ID
+ * @param: SRID - Rate ID
 */
 
 /**
@@ -125,6 +132,23 @@ public class AddLogHeader extends ExtendM3Transaction {
      } else {
         inLAMT = 0d       
      }
+     
+     // Section ID
+     int inDSID 
+     if (mi.in.get("DSID") != null) {
+        inDSID = mi.in.get("DSID") 
+     } else {
+        inDSID = 0        
+     }
+
+     // Rate ID
+     int inSRID 
+     if (mi.in.get("SRID") != null) {
+        inSRID = mi.in.get("SRID") 
+     } else {
+        inSRID = 0        
+     }
+
 
      // Validate Log Header record
      Optional<DBContainer> EXTSLH = findEXTSLH(inCONO, inDIVI, inSTID, inSEQN)
@@ -138,7 +162,7 @@ public class AddLogHeader extends ExtendM3Transaction {
         inLGID = outLGID as Integer
      
         // Write record 
-        addEXTSLHRecord(inCONO, inDIVI, inSTID, inSEQN, inTDCK, inSPEC, inECOD, inTGNO, inLGID, inLAMT)          
+        addEXTSLHRecord(inCONO, inDIVI, inSTID, inSEQN, inTDCK, inSPEC, inECOD, inTGNO, inLGID, inLAMT, inDSID, inSRID)          
      }  
      
      mi.outData.put("CONO", String.valueOf(inCONO)) 
@@ -228,7 +252,7 @@ public class AddLogHeader extends ExtendM3Transaction {
   //******************************************************************** 
   // Add EXTSLH record 
   //********************************************************************     
-  void addEXTSLHRecord(int CONO, String DIVI, int STID, int SEQN, int TDCK, String SPEC, String ECOD, String TGNO, int LGID, double LAMT){  
+  void addEXTSLHRecord(int CONO, String DIVI, int STID, int SEQN, int TDCK, String SPEC, String ECOD, String TGNO, int LGID, double LAMT, int DSID, int SRID){  
        DBAction action = database.table("EXTSLH").index("00").build()
        DBContainer EXTSLH = action.createContainer()
        EXTSLH.set("EXCONO", CONO)
@@ -240,7 +264,9 @@ public class AddLogHeader extends ExtendM3Transaction {
        EXTSLH.set("EXECOD", ECOD)
        EXTSLH.set("EXTGNO", TGNO)
        EXTSLH.set("EXLGID", LGID)
-       EXTSLH.set("EXLAMT", LAMT)       
+       EXTSLH.set("EXLAMT", LAMT)   
+       EXTSLH.set("EXDSID", DSID)  
+       EXTSLH.set("EXSRID", SRID)  
        EXTSLH.set("EXCHID", program.getUser())
        EXTSLH.set("EXCHNO", 1) 
        int regdate = utility.call("DateUtil", "currentDateY8AsInt")

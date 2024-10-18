@@ -8,6 +8,10 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-05-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-07-19   Jessica Bjorklund (Columbus)       Add DSID and SRID as output fields
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -28,7 +32,8 @@
  * @return: TGNO - Tag Number
  * @return: LGID - Log ID
  * @return: LAMT - Amount
-
+ * @return: DSID - Section ID
+ * @return: SRID - Rate ID
  * 
 */
 
@@ -129,6 +134,8 @@ public class LstLogHeader extends ExtendM3Transaction {
       mi.outData.put("TGNO", line.getString("EXTGNO"))
       mi.outData.put("LGID", line.get("EXLGID").toString())
       mi.outData.put("LAMT", line.get("EXLAMT").toString())
+      mi.outData.put("DSID", line.get("EXDSID").toString())
+      mi.outData.put("SRID", line.get("EXSRID").toString())
       mi.write() 
    } 
    
