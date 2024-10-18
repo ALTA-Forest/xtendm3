@@ -8,6 +8,10 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-04-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-10-17   Jessica Bjorklund (Columbus)       Allow blank input for Strings & add logging
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -71,7 +75,7 @@ public class AddDeck extends ExtendM3Transaction {
 
      // Deck Name
      String inDPNA
-     if (mi.in.get("DPNA") != null && mi.in.get("DPNA") != "") {
+     if (mi.in.get("DPNA") != null) {
         inDPNA = mi.inData.get("DPNA").trim() 
      } else {
         inDPNA = ""         
@@ -79,7 +83,7 @@ public class AddDeck extends ExtendM3Transaction {
 
      // Deck Type
      String inTYPE  
-     if (mi.in.get("TYPE") != null && mi.in.get("TYPE") != "") {
+     if (mi.in.get("TYPE") != null) {
         inTYPE = mi.inData.get("TYPE").trim() 
      } else {
         inTYPE = ""      
@@ -87,7 +91,7 @@ public class AddDeck extends ExtendM3Transaction {
            
      // Sort Code
      String inSORT  
-     if (mi.in.get("SORT") != null && mi.in.get("SORT") != "") {
+     if (mi.in.get("SORT") != null) {
         inSORT = mi.inData.get("SORT").trim() 
      } else {
         inSORT= ""      
@@ -102,7 +106,7 @@ public class AddDeck extends ExtendM3Transaction {
 
      // Yard
      String inYARD  
-     if (mi.inData.get("YARD") != null && mi.inData.get("YARD") != "") {
+     if (mi.in.get("YARD") != null) {
         inYARD = mi.inData.get("YARD").trim() 
      } else {
         inYARD = ""      
@@ -151,7 +155,16 @@ public class AddDeck extends ExtendM3Transaction {
         mi.error("Deck Profile already exists")   
         return             
      } else {
-        // Write record       
+        logger.debug("Add to EXTDLH inDPID ${inDPID}")
+        logger.debug("Add to EXTDLH inDPNA ${inDPNA}")
+        logger.debug("Add to EXTDLH inTYPE ${inTYPE}")
+        logger.debug("Add to EXTDLH inSORT ${inSORT}")
+        logger.debug("Add to EXTDLH inYARD ${inYARD}")
+        logger.debug("Add to EXTDLH inMBFW ${inMBFW}")
+        logger.debug("Add to EXTDLH inDPDT ${inDPDT}")
+        logger.debug("Add to EXTDLH inDPLC ${inDPLC}") 
+        
+        // Write record     
         addEXTDPHRecord(inCONO, inDIVI, inDPID, inDPNA, inTYPE, inSORT, inYARD, inMBFW, inDPDT, inDPLC)   
         addDeckDetailsMI(String.valueOf(inCONO), inDIVI, String.valueOf(inDPID), "", "", "", "", "", "", "", "", "")   
      }  

@@ -8,6 +8,10 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-04-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-10-17   Jessica Bjorklund (Columbus)       Allow blank input for Strings
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -16,7 +20,6 @@
  * @param: NAME - Name
  * 
 */
-
 
 
 public class AddDeckType extends ExtendM3Transaction {
@@ -56,7 +59,7 @@ public class AddDeckType extends ExtendM3Transaction {
 
      // Deck Type
      String inTYPE
-     if (mi.in.get("TYPE") != null && mi.in.get("TYPE") != "") {
+     if (mi.in.get("TYPE") != null) {
         inTYPE = mi.inData.get("TYPE").trim() 
      } else {
         inTYPE = ""         
@@ -64,7 +67,7 @@ public class AddDeckType extends ExtendM3Transaction {
            
      // Name
      String inNAME 
-     if (mi.in.get("NAME") != null && mi.in.get("NAME") != "") {
+     if (mi.in.get("NAME") != null) {
         inNAME = mi.inData.get("NAME").trim() 
      } else {
         inNAME= ""      

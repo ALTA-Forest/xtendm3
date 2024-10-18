@@ -8,6 +8,11 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// Date         Changed By                         Description
+// 2023-04-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-10-17   Jessica Bjorklund (Columbus)       Add updEXTDPDRecord()
+
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -25,6 +30,7 @@
  * @param: TRNB - Net Balance
  * 
 */
+
 
 import java.lang.Math
 import java.math.BigDecimal
@@ -432,6 +438,8 @@ public class AddDeckTransfer extends ExtendM3Transaction {
       inTGBFupdate = toDetailTGBF+transactionTGBF
       inTNBFupdate = toDetailTNBF+transactionTNBF
 
+      //Update deck details
+      updEXTDPDRecord()
 
       mi.outData.put("TRNO", String.valueOf(inTRNO)) 
       mi.write()
@@ -608,7 +616,36 @@ public class AddDeckTransfer extends ExtendM3Transaction {
        EXTDPR.set("EXRGTM", regtime)
        action.insert(EXTDPR)         
  } 
+ 
+   //******************************************************************** 
+  // Update EXTDPD record
+  //********************************************************************    
+  void updEXTDPDRecord() {      
+     DBAction action = database.table("EXTDPD").index("00").build()
+     DBContainer EXTDPD = action.getContainer()     
+     EXTDPD.set("EXCONO", inCONO)
+     EXTDPD.set("EXDIVI", inDIVI)
+     EXTDPD.set("EXDPID", inDPIDupdate)
 
+     // Read with lock
+     action.readLock(EXTDPD, updateCallBackEXTDPD)
+     }
+   
+     Closure<?> updateCallBackEXTDPD = { LockedResult lockedResult -> 
+       lockedResult.set("EXLOAD", inLOADupdate)
+       lockedResult.set("EXDLOG", inTLOGupdate)
+       lockedResult.set("EXGVBF", inTGBFupdate)
+       lockedResult.set("EXNVBF", transactionTRNB)
+
+       // Update changed information
+       int changeNo = lockedResult.get("EXCHNO")
+       int newChangeNo = changeNo + 1 
+       int changeddate = utility.call("DateUtil", "currentDateY8AsInt")
+       lockedResult.set("EXLMDT", changeddate)        
+       lockedResult.set("EXCHNO", newChangeNo) 
+       lockedResult.set("EXCHID", program.getUser())
+       lockedResult.update()
+    }
 
 } 
 
