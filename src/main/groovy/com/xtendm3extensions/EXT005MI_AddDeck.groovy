@@ -11,6 +11,7 @@
 // Date         Changed By                         Description
 // 2023-04-10   Jessica Bjorklund (Columbus)       Creation
 // 2024-10-17   Jessica Bjorklund (Columbus)       Allow blank input for Strings & add logging
+// 2024-10-28   Jessica Bjorklund (Columbus)       Change input field DPNA to 100 long
 
 /**
  * IN

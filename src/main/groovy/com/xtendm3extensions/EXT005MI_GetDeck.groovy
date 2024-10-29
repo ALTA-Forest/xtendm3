@@ -8,6 +8,9 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+// 2023-04-10   Jessica Bjorklund (Columbus)       Creation
+// 2024-10-28   Jessica Bjorklund (Columbus)       Change output field DPNA to 100 long
+
 /**
  * IN
  * @param: CONO - Company Number
