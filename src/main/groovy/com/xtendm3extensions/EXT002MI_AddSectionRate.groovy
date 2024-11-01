@@ -8,6 +8,13 @@
 // AFMNI-7/Alias Replacement
 // https://leanswift.atlassian.net/browse/AFMI-7
 
+/*
+ * Date                      Changed By                          Description
+ * 2023-04-10                Jessica Bjorklund                   Version 1 - intial approval
+ * 2024-10-31                Jessica Bjorklund                   Version 2 - Change to get the last number from a number series instead
+ */
+ 
+
 /**
  * IN
  * @param: CONO - Company Number
@@ -41,8 +48,7 @@ public class AddSectionRate extends ExtendM3Transaction {
   Integer inCONO
   String inDIVI
   int inSRID
-  boolean numberFound
-  Integer lastNumber
+  String nextNumber
 
   
   // Constructor 
@@ -138,8 +144,9 @@ public class AddSectionRate extends ExtendM3Transaction {
         mi.error("Contract Section Rate already exists")   
         return             
      } else {
-        findLastNumber()
-        inSRID = lastNumber + 1
+        //Get next number
+        getNextNumber("", "LD", "1") 
+        inSRID = nextNumber as Integer
         // Write record 
         addEXTCSRRecord(inCONO, inDIVI, inSRID, inDSID, inCRSQ, inCRML, inCRXL, inCRMD, inCRXD, inCRRA, inCRNO)          
      }  
@@ -151,48 +158,25 @@ public class AddSectionRate extends ExtendM3Transaction {
 
   }
   
-   //******************************************************************** 
-   // Find last id number used
-   //********************************************************************  
-   void findLastNumber(){   
-     
-     numberFound = false
-     lastNumber = 0
 
-     ExpressionFactory expression = database.getExpressionFactory("EXTCSR")
-     
-     expression = expression.eq("EXCONO", String.valueOf(inCONO)).and(expression.eq("EXDIVI", inDIVI))
-     
-     // Get Last Number
-     DBAction actionline = database.table("EXTCSR")
-     .index("10")
-     .matching(expression)
-     .selection("EXSRID")
-     .reverse()
-     .build()
+   //***************************************************************************** 
+   // Get next number in the number serie using CRS165MI.RtvNextNumber    
+   // Input 
+   // Division
+   // Number Series Type
+   // Number Seriew
+   //***************************************************************************** 
+   void getNextNumber(String division, String numberSeriesType, String numberSeries){   
+        Map<String, String> params = [DIVI: division, NBTY: numberSeriesType, NBID: numberSeries] 
+        Closure<?> callback = {
+        Map<String, String> response ->
+          if(response.NBNR != null){
+            nextNumber = response.NBNR
+          }
+        }
 
-     DBContainer line = actionline.getContainer() 
-     
-     line.set("EXCONO", inCONO)     
-     
-     int pageSize = mi.getMaxRecords() <= 0 || mi.getMaxRecords() >= 10000? 10000: mi.getMaxRecords()        
-     actionline.readAll(line, 1, pageSize, releasedLineProcessor)   
-   
+        miCaller.call("CRS165MI","RtvNextNumber", params, callback)
    } 
-
-    
-  //******************************************************************** 
-  // List Last Number
-  //********************************************************************  
-  Closure<?> releasedLineProcessor = { DBContainer line -> 
-
-      // Output
-      if (!lastNumber) {
-        lastNumber = line.get("EXSRID") 
-        numberFound = true
-      }
-  
-  }
 
 
   //******************************************************************** 
